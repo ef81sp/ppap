@@ -1,8 +1,8 @@
 import { serveDir } from "https://deno.land/std@0.209.0/http/file_server.ts"
 import { addSocket, deleteSocket } from "./store/sockets.ts"
 import { genMsgConnected } from "../wsMsg/msgFromServer.ts"
-import { closeEmptyRoom } from "./store/rooms.ts";
-import { socketMessageHandler } from "./socketMessageHandler.ts";
+import { closeEmptyRoom } from "./store/rooms.ts"
+import { socketMessageHandler } from "./socketMessageHandler.ts"
 function handler(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url)
   if (request.headers.get("upgrade") === "websocket") {
@@ -19,8 +19,7 @@ function handler(request: Request): Promise<Response> {
       if (event.data.includes("ping")) {
         socket.send("pong")
       } else {
-        const msg = socketMessageHandler(event)
-        if (msg) socket.send(JSON.stringify(msg))
+        socketMessageHandler(event, socket)
       }
     }
 

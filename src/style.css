@@ -14,13 +14,10 @@ body {
   min-width: 320px;
 }
 
-.card {
-  padding: 2em;
-}
-
 #app {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
   text-align: center;
 }

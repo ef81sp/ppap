@@ -10,5 +10,16 @@ export type RoomId = string
 export type Room = {
   id: string
   participants: User[]
-  answers: Map<UserToken, string | null>
+  isOpen: boolean
+}
+
+export type UserForClientSide = {
+  name: string
+  answer: string
+  userNumber: number
+}
+export type RoomForClientSide = {
+  id: string
+  participants: UserForClientSide[]
+  isOpen: boolean
 }

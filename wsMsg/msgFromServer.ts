@@ -1,15 +1,32 @@
-import { RoomId, UserToken } from "../backend/type.ts"
+import { Room, RoomForClientSide, RoomId, UserToken } from "../backend/type.ts"
 
-const msgType = ["connected", "roomCreated"] as const
+export type MsgFromServer =
+  | MsgConnected
+  | MsgRoomCreated
+  | MsgIsExistTheRoomResult
+  | MsgRoomInfo
 
-export type MsgFromServer = MsgConnected | MsgRoomCreated
+const _msgType = {
+  connected: "connected",
+  roomCreated: "roomCreated",
+  isExistTheRoomResult: "isExistTheRoomResult",
+  roomInfo: "roomInfo",
+} as const
 type MsgConnected = {
-  type: "connected"
+  type: (typeof _msgType)["connected"]
   userToken: string
 }
 type MsgRoomCreated = {
-  type: "roomCreated"
+  type: (typeof _msgType)["roomCreated"]
   roomId: string
+}
+type MsgIsExistTheRoomResult = {
+  type: (typeof _msgType)["isExistTheRoomResult"]
+  isExistTheRoom: boolean
+}
+type MsgRoomInfo = {
+  type: (typeof _msgType)["roomInfo"]
+  room: RoomForClientSide
 }
 
 export const isMsgFromServer = (data: unknown): data is MsgFromServer => {
@@ -19,7 +36,7 @@ export const isMsgFromServer = (data: unknown): data is MsgFromServer => {
     !(
       "type" in data &&
       typeof data.type === "string" &&
-      msgType.some((v) => v === data.type)
+      Object.values(_msgType).some((v) => v === data.type)
     )
   )
     return false
@@ -31,8 +48,17 @@ export const genMsgConnected = (userToken: UserToken): MsgConnected => ({
   type: "connected",
   userToken,
 })
-
-export const gemMsgRoomCreated = (roomId: RoomId): MsgRoomCreated => ({
+export const genMsgRoomCreated = (roomId: RoomId): MsgRoomCreated => ({
   type: "roomCreated",
-  roomId
+  roomId,
+})
+export const genMsgIsExistTheRoomResult = (
+  isExistTheRoom: boolean
+): MsgIsExistTheRoomResult => ({
+  type: "isExistTheRoomResult",
+  isExistTheRoom,
+})
+export const genMsgRoomInfo = (room: RoomForClientSide): MsgRoomInfo => ({
+  type: "roomInfo",
+  room,
 })

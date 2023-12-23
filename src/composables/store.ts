@@ -1,5 +1,5 @@
 import { ref } from "vue"
-import { User } from "../../backend/type.ts";
+import { RoomForClientSide } from "../../backend/type.ts"
 
 export const user = {
   name: ref(""),
@@ -12,11 +12,14 @@ export const setToken = (token: string) => {
   user.token.value = token
 }
 
-export const room = {
-  id: ref(""),
-  participants: ref<User[]>([])
+export const room = ref<RoomForClientSide>({
+  id: "",
+  participants: [],
+  isOpen: false,
+})
+export const setRoom = (roomForClientSide: RoomForClientSide) => {
+  room.value = roomForClientSide
 }
-
 export const setRoomId = (id: string) => {
-  room.id.value = id
+  room.value.id = id
 }
