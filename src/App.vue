@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { room, user } from "./composables/store"
-import { webSocket } from "./composables/webSocket"
 </script>
 
 <template>
-  <p style="font-size: 0.5rem;">userToken: {{ user.token }}</p>
   <RouterView />
 </template>
 
