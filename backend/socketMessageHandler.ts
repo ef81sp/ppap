@@ -5,7 +5,13 @@ import {
   genMsgRoomCreated,
   genMsgRoomInfo,
 } from "../wsMsg/msgFromServer.ts"
-import { createRoom, enterTheRoom, getRooms, isExistTheRoom } from "./store/rooms.ts"
+import {
+  answer,
+  clearAnswer,
+  createRoom,
+  enterTheRoom,
+  isExistTheRoom,
+} from "./store/rooms.ts"
 import { getSocket } from "./store/sockets.ts"
 import { Room, RoomForClientSide } from "./type.ts"
 
@@ -32,31 +38,20 @@ export const socketMessageHandler = (
         break
       }
       case "enterTheRoom": {
-        enterTheRoom(data)
-        const room = getRooms().get(data.roomId)
+        const room = enterTheRoom(data)
         if (room == undefined) break
         broadcastRoomInfo(room)
         break
       }
       case "answer": {
-        const room = getRooms().get(data.roomId)
+        const room = answer(data)
         if (room == undefined) break
-        const user = room.participants.find(u=>u.token === data.userToken)
-        if (user == undefined) break
-        user.answer = data.answer
-        if (room.participants.every(u=>u.answer !== "")) {
-          room.isOpen = true
-        }
         broadcastRoomInfo(room)
         break
       }
       case "clearAnswer": {
-        const room = getRooms().get(data.roomId)
+        const room = clearAnswer(data.roomId)
         if (room == undefined) break
-        for (const p of room.participants) {
-          p.answer = ""
-        }
-        room.isOpen = false
         broadcastRoomInfo(room)
         break
       }
@@ -67,19 +62,22 @@ export const socketMessageHandler = (
 }
 
 const broadcastRoomInfo = (room: Room) => {
-  const roomForresponse: RoomForClientSide = {
+  const roomForResponse: RoomForClientSide = {
     ...room,
     participants: room.participants.map((p, i) => ({
       name: p.name,
       answer: p.answer,
-      userNumber: i
+      userNumber: i,
     })),
   }
-  const msg = genMsgRoomInfo(roomForresponse)
+
+  const msg = genMsgRoomInfo(roomForResponse)
+
   console.log("BROADCAST:", room.id, "/", msg)
   for (const participant of room.participants) {
     const socket = getSocket(participant.token)
     if (socket == undefined) continue
+
     socket.send(JSON.stringify(msg))
   }
 }

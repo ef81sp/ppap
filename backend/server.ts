@@ -1,7 +1,7 @@
 import { serveDir } from "https://deno.land/std@0.209.0/http/file_server.ts"
 import { addSocket, deleteSocket } from "./store/sockets.ts"
 import { genMsgConnected } from "../wsMsg/msgFromServer.ts"
-import { closeEmptyRoom } from "./store/rooms.ts"
+import { closeEmptyRoom, exitRoom } from "./store/rooms.ts"
 import { socketMessageHandler } from "./socketMessageHandler.ts"
 function handler(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url)
@@ -26,6 +26,7 @@ function handler(request: Request): Promise<Response> {
     socket.onclose = () => {
       console.log("DISCONNECTED")
       deleteSocket(userToken)
+      exitRoom(userToken)
       closeEmptyRoom()
     }
     socket.onerror = (error) => console.error("ERROR:", error)

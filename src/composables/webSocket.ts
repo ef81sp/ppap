@@ -12,12 +12,19 @@ import {
 } from "../../wsMsg/msgFromClient.ts"
 import { RoomId } from "../../backend/type.ts"
 
-export const webSocket = useWebSocket<string>("ws://localhost:8000", {
+const protocol = location.protocol === "https:" ? "wss:" : "ws:"
+const url = import.meta.env.DEV 
+  ? `${protocol}${import.meta.env.VITE_WEBSOCKET_HOST}`
+  : `${protocol}${location.host}`
+export const webSocket = useWebSocket<string>(url, {
   // heartbeat: true,
 })
 
 watch(webSocket.data, (newData) => {
   msgHandler(newData)
+})
+watch(webSocket.status, (newStatus) => {
+  if (newStatus === "CLOSED") location.href = "/"
 })
 
 const msgHandler = (data: string | null) => {

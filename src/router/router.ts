@@ -1,4 +1,4 @@
-import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router"
+import { RouteRecordRaw, createRouter, createWebHashHistory, createWebHistory } from "vue-router"
 import Index from "../components/Index.vue"
 import Room from "../components/Room.vue"
 import { sendIsExistTheRoom } from "../composables/webSocket.ts"
@@ -24,7 +24,7 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 })
 
