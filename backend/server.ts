@@ -44,4 +44,6 @@ function handler(request: Request): Promise<Response> {
   return Promise.resolve(new Response("TEMPORARY OK"))
 }
 
-Deno.serve(handler)
+Deno.serve({
+  port: Number(Deno.env.get("PORT")) || 8000
+}, handler)
