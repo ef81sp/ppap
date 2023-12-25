@@ -95,7 +95,7 @@ export const clearAnswer = (roomId: RoomId): Room | void => {
   return room
 }
 
-export const exitRoom = (userToken: UserToken) => {
+export const exitRoom = (userToken: UserToken): Room | void => {
   const roomId = roomsUserAt.get(userToken)
   if (roomId == undefined) return
   const room = rooms.get(roomId)
@@ -104,6 +104,7 @@ export const exitRoom = (userToken: UserToken) => {
   sortParticipants(room)
   roomsUserAt.delete(userToken)
   latestUpdateOfRoom.set(roomId, new Date())
+  return room
 }
 export const closeEmptyRoom = () => {
   for (const [id, room] of rooms) {

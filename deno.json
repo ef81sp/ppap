@@ -3,8 +3,8 @@
     "dev": "deno run -A --node-modules-dir npm:vite",
     "build": "deno run -A --node-modules-dir npm:vite build",
     "preview": "deno run -A --node-modules-dir npm:vite preview",
-    "serve": "deno run --allow-net --allow-read backend/server.ts --prod",
-    "dev:serve": "deno run --watch --allow-net --allow-read backend/server.ts --dev"
+    "serve": "deno run --allow-net --allow-read --allow-env backend/server.ts",
+    "dev:serve": "deno run --watch --allow-net --allow-read --allow-env backend/server.ts"
   },
   "imports": {
     "vue": "npm:vue@3",
