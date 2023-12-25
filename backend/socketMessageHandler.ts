@@ -8,12 +8,14 @@ import {
 import {
   answer,
   clearAnswer,
+  closeEmptyRoom,
   createRoom,
   enterTheRoom,
+  exitRoom,
   isExistTheRoom,
 } from "./store/rooms.ts"
-import { getSocket } from "./store/sockets.ts"
-import { Room, RoomForClientSide } from "./type.ts"
+import { deleteSocket, getSocket } from "./store/sockets.ts"
+import { Room, RoomForClientSide, UserToken } from "./type.ts"
 
 export const socketMessageHandler = (
   event: MessageEvent,
@@ -61,7 +63,7 @@ export const socketMessageHandler = (
   }
 }
 
-const broadcastRoomInfo = (room: Room) => {
+export const broadcastRoomInfo = (room: Room) => {
   const roomForResponse: RoomForClientSide = {
     ...room,
     participants: room.participants.map((p, i) => ({
@@ -80,4 +82,14 @@ const broadcastRoomInfo = (room: Room) => {
 
     socket.send(JSON.stringify(msg))
   }
+}
+
+export const closeHandler = (userToken: UserToken) => {
+  console.log("DISCONNECTED:", userToken)
+  deleteSocket(userToken)
+  const room = exitRoom(userToken)
+  if (room?.participants?.length) {
+    broadcastRoomInfo(room)
+  }
+  closeEmptyRoom()
 }

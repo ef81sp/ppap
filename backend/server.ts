@@ -1,8 +1,7 @@
 import { serveDir } from "https://deno.land/std@0.209.0/http/file_server.ts"
-import { addSocket, deleteSocket } from "./store/sockets.ts"
+import { addSocket } from "./store/sockets.ts"
 import { genMsgConnected } from "../wsMsg/msgFromServer.ts"
-import { closeEmptyRoom, exitRoom } from "./store/rooms.ts"
-import { socketMessageHandler } from "./socketMessageHandler.ts"
+import { closeHandler, socketMessageHandler } from "./socketMessageHandler.ts"
 function handler(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url)
   if (request.headers.get("upgrade") === "websocket") {
@@ -24,10 +23,7 @@ function handler(request: Request): Promise<Response> {
     }
 
     socket.onclose = () => {
-      console.log("DISCONNECTED")
-      deleteSocket(userToken)
-      exitRoom(userToken)
-      closeEmptyRoom()
+      closeHandler(userToken)
     }
     socket.onerror = (error) => console.error("ERROR:", error)
 
@@ -44,6 +40,9 @@ function handler(request: Request): Promise<Response> {
   return Promise.resolve(new Response("TEMPORARY OK"))
 }
 
-Deno.serve({
-  port: Number(Deno.env.get("PORT")) || 8000
-}, handler)
+Deno.serve(
+  {
+    port: Number(Deno.env.get("PORT")) || 8000,
+  },
+  handler
+)
