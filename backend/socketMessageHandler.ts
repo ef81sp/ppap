@@ -1,9 +1,9 @@
 import { isMsgFromClient } from "../wsMsg/msgFromClient.ts"
 import {
-  MsgFromServer,
   genMsgIsExistTheRoomResult,
   genMsgRoomCreated,
   genMsgRoomInfo,
+  MsgFromServer,
 } from "../wsMsg/msgFromServer.ts"
 import {
   answer,
@@ -19,7 +19,7 @@ import { Room, RoomForClientSide, UserToken } from "./type.ts"
 
 export const socketMessageHandler = (
   event: MessageEvent,
-  socket: WebSocket
+  socket: WebSocket,
 ): MsgFromServer | void => {
   console.log(`RECEIVED: ${event.data}`)
   const data = JSON.parse(event.data)

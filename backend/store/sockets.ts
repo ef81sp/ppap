@@ -1,4 +1,4 @@
-import { UserToken, UsersSockets } from "../../backend/type.ts"
+import { UsersSockets, UserToken } from "../../backend/type.ts"
 
 const usersSockets: UsersSockets = new Map()
 export const getSocket = (userToken: UserToken) => usersSockets.get(userToken)

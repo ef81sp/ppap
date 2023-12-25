@@ -1,4 +1,4 @@
-import { Room, RoomForClientSide, RoomId, UserToken } from "../backend/type.ts"
+import { RoomForClientSide, RoomId, UserToken } from "../backend/type.ts"
 
 export type MsgFromServer =
   | MsgConnected
@@ -38,8 +38,9 @@ export const isMsgFromServer = (data: unknown): data is MsgFromServer => {
       typeof data.type === "string" &&
       Object.values(_msgType).some((v) => v === data.type)
     )
-  )
+  ) {
     return false
+  }
 
   return true
 }
@@ -53,7 +54,7 @@ export const genMsgRoomCreated = (roomId: RoomId): MsgRoomCreated => ({
   roomId,
 })
 export const genMsgIsExistTheRoomResult = (
-  isExistTheRoom: boolean
+  isExistTheRoom: boolean,
 ): MsgIsExistTheRoomResult => ({
   type: "isExistTheRoomResult",
   isExistTheRoom,

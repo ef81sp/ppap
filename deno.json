@@ -10,5 +10,16 @@
     "vue": "npm:vue@3",
     "vue-router": "npm:vue-router@4",
     "@vueuse/core": "npm:@vueuse/core@10"
+  },
+  "fmt": {
+    "semiColons": false,
+    "lineWidth": 100,
+    "exclude": [".vite/", "dist", "node_modules"]
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    },
+    "exclude": [".vite/", "dist", "node_modules", "src/vite-env.d.ts"]
   }
 }
