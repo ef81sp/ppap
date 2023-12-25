@@ -13,7 +13,7 @@ import {
 import { RoomId } from "../../backend/type.ts"
 
 const protocol = location.protocol === "https:" ? "wss:" : "ws:"
-const url = import.meta.env.DEV 
+const url = import.meta.env.DEV
   ? `${protocol}${import.meta.env.VITE_WEBSOCKET_HOST}`
   : `${protocol}${location.host}`
 export const webSocket = useWebSocket<string>(url, {
@@ -59,7 +59,7 @@ const msgHandler = (data: string | null) => {
 export const sendCreateRoom = (name: string) => {
   setName(name)
   webSocket.send(
-    JSON.stringify(genMsgCreateRoom(user.token.value, user.name.value))
+    JSON.stringify(genMsgCreateRoom(user.token.value, user.name.value)),
   )
 }
 export const sendIsExistTheRoom = (roomId: RoomId) => {
@@ -72,8 +72,8 @@ export const sendEnterTheRoom = (roomId: RoomId, userName: string) => {
         roomId,
         userToken: user.token.value,
         userName: userName,
-      })
-    )
+      }),
+    ),
   )
 }
 export const sendAnswer = (answer: string) => {
@@ -83,8 +83,8 @@ export const sendAnswer = (answer: string) => {
         userToken: user.token.value,
         roomId: room.value.id,
         answer,
-      })
-    )
+      }),
+    ),
   )
 }
 export const sendClearAnswer = () => {

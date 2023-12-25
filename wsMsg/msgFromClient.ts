@@ -50,8 +50,9 @@ export const isMsgFromClient = (data: unknown): data is MsgFromClient => {
       typeof data.type === "string" &&
       Object.values(msgType).some((v) => v === data.type)
     )
-  )
+  ) {
     return false
+  }
 
   return true
 }
@@ -60,7 +61,7 @@ export const isMsgFromClient = (data: unknown): data is MsgFromClient => {
 
 export const genMsgCreateRoom = (
   userToken: UserToken,
-  userName: string
+  userName: string,
 ): MsgFromClient => ({
   type: "createRoom",
   userToken,

@@ -1,4 +1,4 @@
-import { RouteRecordRaw, createRouter, createWebHashHistory, createWebHistory } from "vue-router"
+import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router"
 import Index from "../components/Index.vue"
 import Room from "../components/Room.vue"
 import { sendIsExistTheRoom } from "../composables/webSocket.ts"

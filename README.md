@@ -3,11 +3,13 @@
 Deno + Vite + Vue
 
 ## Run Vite Dev Server
+
 ```sh
 deno task dev
 ```
 
 ## Run Deno Server
-```sh 
+
+```sh
 deno task dev:serve
 ```
