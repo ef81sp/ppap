@@ -1,5 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -8,16 +11,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-
-body {
-  margin: 0;
-  min-width: 320px;
+h2 {
+  @apply text-3xl;
 }
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding-left: 2rem;
-  padding-right: 2rem;
-  text-align: center;
+h3 {
+  @apply text-2xl;
+}
+button {
+  @apply border-solid border-2 border-black rounded px-2;
 }
