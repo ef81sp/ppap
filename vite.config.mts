@@ -4,6 +4,9 @@ import vue from "npm:@vitejs/plugin-vue@^4.5.0"
 import "npm:vue@^3.3.8"
 import "npm:@vueuse/core@^10.7.0"
 import "npm:vue-router@4"
+import "npm:tailwindcss@^3.4.0"
+import "npm:postcss@^8.4.32"
+import "npm:autoprefixer@^10.4.16"
 
 // https://vitejs.dev/config/
 export default defineConfig({

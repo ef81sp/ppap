@@ -37,19 +37,18 @@ const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
 </script>
 
 <template>
-  <h2>Room</h2>
+  <h2 class="text-3xl">Room</h2>
   <InputName
     v-if="step === 'name register'"
     button-text="enter the room"
     @submit="enterTheRoom"
   />
-  <main v-else>
+  <main v-else class="my-4">
     <section>
-      <!-- <p>{{ room }}</p> -->
-      <p class="url">URL: {{ url }}</p>
+      <p class="text-sm">{{ url }}</p>
       <button @click="copyUrl" class="button">copy URL</button>
     </section>
-    <section class="card-area">
+    <section class="flex justify-center items-center mt-8">
       <RoomParticipant
         v-for="p in room.participants"
         :key="p.userNumber"
@@ -57,8 +56,8 @@ const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
         :is-open="room.isOpen"
       />
     </section>
-    <section class="button-area">
-      <div>
+    <section class="mt-8">
+      <div class="mt-2 *:mx-1">
         <RoomAnswerButton
           v-for="option in answerOptions"
           :key="option"
@@ -66,26 +65,9 @@ const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
           @click="sendAnswer"
         />
       </div>
-      <div>
+      <div class="mt-4">
         <button @click="sendClearAnswer" class="button">clear</button>
       </div>
     </section>
   </main>
 </template>
-
-<style scoped>
-.url {
-  font-size: 0.5rem;
-}
-.card-area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.button {
-  font-size: 1.25rem;
-}
-.button-area > * + *{
-  margin-top: 1rem;
-}
-</style>
