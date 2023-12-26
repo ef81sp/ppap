@@ -17,7 +17,7 @@ const url = import.meta.env.DEV
   ? `${protocol}${import.meta.env.VITE_WEBSOCKET_HOST}`
   : `${protocol}${location.host}`
 export const webSocket = useWebSocket<string>(url, {
-  // heartbeat: true,
+  heartbeat: true,
 })
 
 watch(webSocket.data, (newData) => {
@@ -29,6 +29,7 @@ watch(webSocket.status, (newStatus) => {
 
 const msgHandler = (data: string | null) => {
   if (data === null) return
+  if (data === "pong") return
   const msg = JSON.parse(data)
   if (!isMsgFromServer(msg)) return
   switch (msg.type) {

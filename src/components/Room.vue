@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, watch } from "vue"
-import { room, setName, setRoomId, user } from "../composables/store"
-import { useRouter, useRoute } from "vue-router"
+import { computed } from "vue"
+import { room, setName, user } from "../composables/store"
+import { useRoute } from "vue-router"
 
 import InputName from "./InputName.vue"
 import {

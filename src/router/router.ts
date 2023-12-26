@@ -13,7 +13,6 @@ const routes: RouteRecordRaw[] = [
     path: "/:roomId",
     name: "Room",
     component: Room,
-    props: true,
     beforeEnter: (to) => {
       // createRoomのあとにも走ってしまうけれど一旦許容する
       const roomId = to.params.roomId
