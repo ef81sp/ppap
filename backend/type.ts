@@ -17,6 +17,7 @@ export type UserForClientSide = {
   name: string
   answer: string
   userNumber: number
+  isMe: boolean
 }
 export type RoomForClientSide = {
   id: string
