@@ -33,7 +33,7 @@ function handler(request: Request): Promise<Response> {
   if (
     pathname === "/" ||
     pathname.startsWith("/assets") ||
-    pathname.endsWith(".svg")
+    pathname.endsWith(".png")
   ) {
     return serveDir(request, { fsRoot: "./dist/" })
   }
