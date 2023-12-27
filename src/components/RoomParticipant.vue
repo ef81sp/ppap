@@ -9,11 +9,10 @@ const answer = computed(() => {
   if (props.isOpen) return props.participant.answer
   return "?"
 })
-const txtIsMe = computed(() => (props.participant.isMe ? "(Me)" : ""))
 </script>
 <template>
   <article class="w-32 flex flex-col-reverse items-center">
-    <h3 class="m-1">{{ `${participant.name} ${txtIsMe}` }}</h3>
+    <h3 class="m-1">{{ participant.name }}</h3>
     <RoomParticipantCard :answer="answer" :is-open="props.isOpen" />
   </article>
 </template>
