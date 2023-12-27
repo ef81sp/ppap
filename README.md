@@ -1,4 +1,4 @@
-# PPAP: Planning Porker App Portable
+# PPAP: Planning Poker App Portable
 
 Deno + Vite + Vue
 
