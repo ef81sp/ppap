@@ -35,6 +35,9 @@ const copyUrl = () => {
 }
 
 const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
+const selectingAnswer = computed<string>(
+  () => room.value.participants.find((p) => p.isMe)?.answer || ""
+)
 </script>
 
 <template>
@@ -63,6 +66,7 @@ const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
           v-for="option in answerOptions"
           :key="option"
           :option="option"
+          :is-selected="option === selectingAnswer"
           @click="sendAnswer"
         />
       </div>
