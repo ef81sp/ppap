@@ -18,6 +18,7 @@ const name = ref("")
     <label for="userName">Your Name</label>
     <input
       type="text"
+      required
       placeholder="enter your name"
       class="border-solid border border-black p-1 text-center"
       v-model="name"
