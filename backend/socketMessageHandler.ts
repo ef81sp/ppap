@@ -26,6 +26,7 @@ export const socketMessageHandler = (
   if (isMsgFromClient(data)) {
     switch (data.type) {
       case "createRoom": {
+        if (!data.userName) break
         const room = createRoom(data.userToken, data.userName)
         const msg = genMsgRoomCreated(room.id)
         console.log("SEND:", msg)
@@ -40,6 +41,7 @@ export const socketMessageHandler = (
         break
       }
       case "enterTheRoom": {
+        if (!data.userName) break
         const room = enterTheRoom(data)
         if (room == undefined) break
         broadcastRoomInfo(room)
