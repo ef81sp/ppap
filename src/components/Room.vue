@@ -11,6 +11,7 @@ import {
 } from "../composables/webSocket"
 import RoomParticipant from "./RoomParticipant.vue"
 import RoomAnswerButton from "./RoomAnswerButton.vue"
+import VButton from "./VButton.vue"
 
 const route = useRoute()
 
@@ -34,6 +35,9 @@ const copyUrl = () => {
 }
 
 const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
+const selectingAnswer = computed<string>(
+  () => room.value.participants.find((p) => p.isMe)?.answer || ""
+)
 </script>
 
 <template>
@@ -46,7 +50,7 @@ const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
   <main v-else class="my-4">
     <section>
       <p class="text-sm">{{ url }}</p>
-      <button @click="copyUrl" class="button">copy URL</button>
+      <VButton @click="copyUrl">copy URL</VButton>
     </section>
     <section class="flex justify-center items-center mt-8">
       <RoomParticipant
@@ -62,11 +66,12 @@ const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
           v-for="option in answerOptions"
           :key="option"
           :option="option"
+          :is-selected="option === selectingAnswer"
           @click="sendAnswer"
         />
       </div>
       <div class="mt-4">
-        <button @click="sendClearAnswer" class="button">clear</button>
+        <VButton @click="sendClearAnswer">clear</VButton>
       </div>
     </section>
   </main>

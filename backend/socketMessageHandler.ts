@@ -64,21 +64,24 @@ export const socketMessageHandler = (
 }
 
 export const broadcastRoomInfo = (room: Room) => {
-  const roomForResponse: RoomForClientSide = {
+  const genRoomForClientSide = (
+    room: Room,
+    userToken: UserToken,
+  ): RoomForClientSide => ({
     ...room,
     participants: room.participants.map((p, i) => ({
       name: p.name,
       answer: p.answer,
       userNumber: i,
+      isMe: p.token === userToken,
     })),
-  }
+  })
 
-  const msg = genMsgRoomInfo(roomForResponse)
-
-  console.log("BROADCAST:", room.id, "/", msg)
+  console.log("BROADCAST:", room.id)
   for (const participant of room.participants) {
     const socket = getSocket(participant.token)
     if (socket == undefined) continue
+    const msg = genMsgRoomInfo(genRoomForClientSide(room, participant.token))
 
     socket.send(JSON.stringify(msg))
   }
