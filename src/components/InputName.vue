@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue"
+import VButton from "./VButton.vue"
 
 const props = defineProps<{
   buttonText: string
@@ -21,8 +22,8 @@ const name = ref("")
       class="border-solid border border-black p-1 text-center"
       v-model="name"
     />
-    <button type="submit" class="border-solid border-2 border-black rounded">
+    <VButton type="submit">
       {{ props.buttonText }}
-    </button>
+    </VButton>
   </form>
 </template>
