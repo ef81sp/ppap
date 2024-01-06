@@ -49,7 +49,6 @@ const selectingAnswer = computed<string>(
   />
   <main v-else class="my-4">
     <section>
-      <p class="text-sm">{{ url }}</p>
       <VButton @click="copyUrl">copy URL</VButton>
     </section>
     <section class="flex justify-center items-center mt-8">
