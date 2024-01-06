@@ -49,7 +49,6 @@ const selectingAnswer = computed<string>(
   />
   <main v-else class="my-4">
     <section>
-      <p class="text-sm">{{ url }}</p>
       <VButton @click="copyUrl">copy URL</VButton>
     </section>
     <section class="flex justify-center items-center mt-8">
@@ -61,7 +60,7 @@ const selectingAnswer = computed<string>(
       />
     </section>
     <section class="mt-8">
-      <div class="mt-2 *:mx-1">
+      <div class="mt-2 *:mx-1 *:my-3">
         <RoomAnswerButton
           v-for="option in answerOptions"
           :key="option"
