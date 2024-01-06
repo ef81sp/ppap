@@ -60,7 +60,7 @@ const selectingAnswer = computed<string>(
       />
     </section>
     <section class="mt-8">
-      <div class="mt-2 *:mx-1">
+      <div class="mt-2 *:mx-1 *:my-3">
         <RoomAnswerButton
           v-for="option in answerOptions"
           :key="option"
