@@ -25,7 +25,10 @@ function handler(request: Request): Promise<Response> {
     socket.onclose = () => {
       closeHandler(userToken)
     }
-    socket.onerror = (error) => console.error("ERROR:", error)
+    socket.onerror = (error) => {
+      console.error("ERROR:", error)
+      closeHandler(userToken)
+    }
 
     return Promise.resolve(response)
   }
