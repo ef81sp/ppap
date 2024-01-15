@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from "vue"
+import { computed, onMounted, ref, watch, watchEffect } from "vue"
 import { room, setName, user } from "../composables/store"
 import { useRoute } from "vue-router"
 
@@ -38,6 +38,27 @@ watch(
   },
   { once: true }
 )
+
+// 無理やりでやばい。WebSocketのメッセージを追加して、participantにisAudienceステータスをもたせるべきだ。
+const isAudience = ref(false)
+watchEffect(() => {
+  if (
+    isAudience.value &&
+    room.value.participants.find((p) => p.isMe)?.answer === ""
+  ) {
+    sendAnswer("-1")
+  }
+})
+watch(isAudience, (newValue, oldValue) => {
+  if (newValue === true && oldValue === false) {
+    sendAnswer("-1")
+    return 
+  } 
+  if (newValue === false && oldValue === true) {
+    sendAnswer("")
+    return
+  }
+})
 
 const enterTheRoom = (userName: string) => {
   const roomId = route.params.roomId
@@ -93,6 +114,10 @@ const exit = () => {
           :is-selected="option === selectingAnswer"
           @click="sendAnswer"
         />
+      </div>
+      <div class="mt-4">
+        <input type="checkbox" v-model="isAudience" id="is-audience" />
+        <label for="is-audience" class="ml-2">I'm an audience.</label>
       </div>
       <div class="mt-4">
         <VButton @click="sendClearAnswer" class="w-16">clear</VButton>
