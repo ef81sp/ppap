@@ -61,6 +61,8 @@ export const enterTheRoom = ({
   })
   sortParticipants(room)
   latestUpdateOfRoom.set(roomId, new Date())
+  roomsUserAt.set(userToken, roomId)
+
   return room
 }
 
