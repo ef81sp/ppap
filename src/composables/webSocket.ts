@@ -2,7 +2,7 @@ import { useWebSocket } from "@vueuse/core"
 import { isMsgFromServer } from "../../wsMsg/msgFromServer.ts"
 import { room, setName, setRoom, setRoomId, setToken, user } from "./store.ts"
 import router from "../router/router.ts"
-import { watch } from "vue"
+import { ref, watch } from "vue"
 import {
   genMsgAnswer,
   genMsgClearAnswer,
@@ -16,6 +16,7 @@ const protocol = location.protocol === "https:" ? "wss:" : "ws:"
 const url = import.meta.env.DEV
   ? `${protocol}${import.meta.env.VITE_WEBSOCKET_HOST}`
   : `${protocol}${location.host}`
+
 export const webSocket = useWebSocket<string>(url, {
   heartbeat: true,
   autoReconnect: true,
@@ -27,6 +28,8 @@ watch(webSocket.data, (newData) => {
 watch(webSocket.status, (newStatus) => {
   if (newStatus === "CLOSED") location.href = "/"
 })
+
+export const isRoomCreator = ref(false)
 
 const msgHandler = (data: string | null) => {
   if (data === null) return
@@ -40,11 +43,17 @@ const msgHandler = (data: string | null) => {
     }
     case "roomCreated": {
       setRoomId(msg.roomId)
+
+      sessionStorage.setItem("roomId", msg.roomId)
+      sessionStorage.setItem("userName", user.name.value)
       router.push(`/${msg.roomId}`)
       break
     }
     case "isExistTheRoomResult": {
-      if (!msg.isExistTheRoom) router.push("/")
+      if (!msg.isExistTheRoom) {
+        sessionStorage.clear()
+        router.push("/")
+      }
       break
     }
     case "roomInfo": {
@@ -60,6 +69,7 @@ const msgHandler = (data: string | null) => {
 
 export const sendCreateRoom = (name: string) => {
   setName(name)
+  isRoomCreator.value = true
   webSocket.send(
     JSON.stringify(genMsgCreateRoom(user.token.value, user.name.value)),
   )
