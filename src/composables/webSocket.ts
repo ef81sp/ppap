@@ -18,6 +18,7 @@ const url = import.meta.env.DEV
   : `${protocol}${location.host}`
 export const webSocket = useWebSocket<string>(url, {
   heartbeat: true,
+  autoReconnect: true,
 })
 
 watch(webSocket.data, (newData) => {
