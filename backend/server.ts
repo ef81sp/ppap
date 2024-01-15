@@ -25,7 +25,10 @@ function handler(request: Request): Promise<Response> {
     socket.onclose = () => {
       closeHandler(userToken)
     }
-    socket.onerror = (error) => console.error("ERROR:", error)
+    socket.onerror = (error) => {
+      console.error("ERROR:", error)
+      closeHandler(userToken)
+    }
 
     return Promise.resolve(response)
   }
@@ -37,7 +40,15 @@ function handler(request: Request): Promise<Response> {
   ) {
     return serveDir(request, { fsRoot: "./dist/" })
   }
-  return Promise.resolve(new Response("TEMPORARY OK"))
+  return Promise.resolve(
+    new Response("Not found", {
+      status: 404,
+      statusText: "Not found",
+      headers: {
+        "content-type": "text/plain",
+      },
+    }),
+  )
 }
 
 Deno.serve(

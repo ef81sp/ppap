@@ -61,6 +61,8 @@ export const enterTheRoom = ({
   })
   sortParticipants(room)
   latestUpdateOfRoom.set(roomId, new Date())
+  roomsUserAt.set(userToken, roomId)
+
   return room
 }
 
@@ -100,6 +102,7 @@ export const exitRoom = (userToken: UserToken): Room | void => {
   if (roomId == undefined) return
   const room = rooms.get(roomId)
   if (room == undefined) return
+  console.log("exit room:", roomId, "user:", userToken)
   room.participants = room.participants.filter((v) => v.token !== userToken)
   sortParticipants(room)
   roomsUserAt.delete(userToken)
@@ -111,12 +114,14 @@ export const closeEmptyRoom = () => {
     if (room.participants.length === 0) {
       rooms.delete(id)
       latestUpdateOfRoom.delete(id)
+      console.log("room closed:", id)
     }
   }
 }
 const closeRoom = (roomId: RoomId) => {
   const room = rooms.get(roomId)
   if (room == undefined) return
+  console.log("room closed:", roomId)
   // 残っているユーザーを全員切断
   for (const p of room.participants) {
     const socket = getSocket(p.token)
