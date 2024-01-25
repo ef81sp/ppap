@@ -100,7 +100,7 @@ const exit = () => {
     <section>
       <VButton @click="copyUrl">copy URL</VButton>
     </section>
-    <section class="flex justify-center items-center mt-8">
+    <section class="flex justify-center flex-wrap items-center mt-8 gap-y-4">
       <RoomParticipant
         v-for="p in room.participants"
         :key="p.userNumber"
