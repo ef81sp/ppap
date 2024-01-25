@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect } from "vue"
+import { computed, ref, watch, watchEffect } from "vue"
 import { room, setName, user } from "../composables/store"
 import { useRoute } from "vue-router"
 
@@ -8,12 +8,10 @@ import {
   sendAnswer,
   sendEnterTheRoom,
   sendClearAnswer,
-  isRoomCreator,
 } from "../composables/webSocket"
 import RoomParticipant from "./RoomParticipant.vue"
 import RoomAnswerButton from "./RoomAnswerButton.vue"
 import VButton from "./VButton.vue"
-import router from "../router/router"
 
 const route = useRoute()
 
@@ -50,10 +48,11 @@ watchEffect(() => {
   }
 })
 watch(isAudience, (newValue, oldValue) => {
+  sessionStorage.setItem("isAudience", newValue.toString())
   if (newValue === true && oldValue === false) {
     sendAnswer("-1")
-    return 
-  } 
+    return
+  }
   if (newValue === false && oldValue === true) {
     sendAnswer("")
     return
@@ -67,6 +66,11 @@ const enterTheRoom = (userName: string) => {
   sendEnterTheRoom(roomId, userName)
   sessionStorage.setItem("roomId", roomId)
   sessionStorage.setItem("userName", user.name.value)
+
+  const _isAudience = sessionStorage.getItem("isAudience")
+  if (_isAudience === "true") {
+    isAudience.value = true
+  }
 }
 
 const url = window.location.toString()
@@ -80,8 +84,7 @@ const selectingAnswer = computed<string>(
 )
 
 const exit = () => {
-  sessionStorage.removeItem("roomId")
-  sessionStorage.removeItem("userName")
+  sessionStorage.clear()
   window.location.href = "/"
 }
 </script>
@@ -97,7 +100,7 @@ const exit = () => {
     <section>
       <VButton @click="copyUrl">copy URL</VButton>
     </section>
-    <section class="flex justify-center items-center mt-8">
+    <section class="flex justify-center flex-wrap items-center mt-8 gap-y-4">
       <RoomParticipant
         v-for="p in room.participants"
         :key="p.userNumber"
