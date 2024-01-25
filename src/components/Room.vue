@@ -84,9 +84,7 @@ const selectingAnswer = computed<string>(
 )
 
 const exit = () => {
-  sessionStorage.removeItem("roomId")
-  sessionStorage.removeItem("userName")
-  sessionStorage.removeItem("isAudience")
+  sessionStorage.clear()
   window.location.href = "/"
 }
 </script>
