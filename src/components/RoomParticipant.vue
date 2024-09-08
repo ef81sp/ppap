@@ -13,7 +13,7 @@ const answer = computed(() => {
 </script>
 <template>
   <article class="w-32 flex flex-col-reverse items-center">
-    <h3 class="m-1">{{ participant.name }}</h3>
+    <h3 class="m-1 w-full truncate">{{ participant.name }}</h3>
     <!-- Audience の場合、 Room.vue からそれを示す値として -1 を送っている -->
     <div
       v-if="answer === '-1'"
