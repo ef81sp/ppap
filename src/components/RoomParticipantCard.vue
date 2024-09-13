@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue"
-import backUrl from "../assets/trading_card08_back_red.png"
+import backUrl from "@/src/assets/trading_card08_back_red.png"
 
 const props = defineProps<{
   answer: string

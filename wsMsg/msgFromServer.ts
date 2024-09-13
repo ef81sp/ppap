@@ -1,4 +1,4 @@
-import { RoomForClientSide, RoomId, UserToken } from "../backend/type.ts"
+import { RoomForClientSide, RoomId, UserToken } from "@/backend/type.ts"
 
 export type MsgFromServer =
   | MsgConnected

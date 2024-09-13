@@ -1,5 +1,5 @@
 import { ref } from "vue"
-import { RoomForClientSide } from "../../backend/type.ts"
+import { RoomForClientSide } from "@/backend/type.ts"
 
 export const user = {
   name: ref(""),

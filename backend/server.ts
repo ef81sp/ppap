@@ -1,7 +1,8 @@
 import { serveDir } from "https://deno.land/std@0.209.0/http/file_server.ts"
 import { addSocket } from "./store/sockets.ts"
-import { genMsgConnected } from "../wsMsg/msgFromServer.ts"
+import { genMsgConnected } from "@/wsMsg/msgFromServer.ts"
 import { closeHandler, socketMessageHandler } from "./socketMessageHandler.ts"
+
 function handler(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url)
   if (request.headers.get("upgrade") === "websocket") {

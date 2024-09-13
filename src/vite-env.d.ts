@@ -6,8 +6,6 @@ declare module "*.vue" {
   export default component
 }
 
-/// <reference types="vite/client" />
-
 interface ImportMetaEnv {
   readonly VITE_WEBSOCKET_HOST: string
   readonly DEV: boolean

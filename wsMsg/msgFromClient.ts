@@ -1,4 +1,4 @@
-import { RoomId, UserToken } from "../backend/type.ts"
+import { RoomId, UserToken } from "@/backend/type.ts"
 
 const msgType = {
   createRoom: "createRoom",

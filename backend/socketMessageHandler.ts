@@ -1,10 +1,10 @@
-import { isMsgFromClient } from "../wsMsg/msgFromClient.ts"
+import { isMsgFromClient } from "@/wsMsg/msgFromClient.ts"
 import {
   genMsgIsExistTheRoomResult,
   genMsgRoomCreated,
   genMsgRoomInfo,
   MsgFromServer,
-} from "../wsMsg/msgFromServer.ts"
+} from "@/wsMsg/msgFromServer.ts"
 import {
   answer,
   clearAnswer,

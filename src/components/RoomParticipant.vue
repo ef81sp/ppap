@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue"
-import { UserForClientSide } from "../../backend/type"
+import { UserForClientSide } from "@/backend/type"
 import RoomParticipantCard from "./RoomParticipantCard.vue"
 
 const props = defineProps<{ participant: UserForClientSide; isOpen: boolean }>()
