@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from "vue"
-import { room, setName, user } from "../composables/store"
+import { room, setName, user } from "@/src/composables/store"
 import { useRoute } from "vue-router"
 
 import InputName from "./InputName.vue"

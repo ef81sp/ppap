@@ -8,9 +8,12 @@
   },
   "imports": {
     "vue": "npm:vue@3",
+    "vite": "npm:vite@5",
+    "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@4",
     "vue-router": "npm:vue-router@4",
     "@vueuse/core": "npm:@vueuse/core@10",
-    "tailwindcss": "npm:tailwindcss@3"
+    "tailwindcss": "npm:tailwindcss@3",
+    "@/": "./"
   },
   "fmt": {
     "semiColons": false,
@@ -21,6 +24,9 @@
     "rules": {
       "tags": ["recommended"]
     },
-    "exclude": [".vite/", "dist", "node_modules", "src/vite-env.d.ts"]
+    "exclude": [".vite/", "dist", "node_modules"]
+  },
+  "compilerOptions": {
+    "types": ["./src/vite-env.d.ts"]
   }
 }

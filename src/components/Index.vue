@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { sendCreateRoom } from "../composables/webSocket"
+import { sendCreateRoom } from "@/src/composables/webSocket"
 import InputName from "./InputName.vue"
 </script>
 <template>

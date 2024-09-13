@@ -1,7 +1,7 @@
 import { useWebSocket } from "@vueuse/core"
-import { isMsgFromServer } from "../../wsMsg/msgFromServer.ts"
+import { isMsgFromServer } from "@/wsMsg/msgFromServer.ts"
 import { room, setName, setRoom, setRoomId, setToken, user } from "./store.ts"
-import router from "../router/router.ts"
+import router from "@/src/router/router.ts"
 import { ref, watch } from "vue"
 import {
   genMsgAnswer,

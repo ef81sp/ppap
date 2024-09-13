@@ -1,4 +1,4 @@
-import { Room, RoomId, UserToken } from "../../backend/type.ts"
+import { Room, RoomId, UserToken } from "@/backend/type.ts"
 import { deleteSocket, getSocket } from "./sockets.ts"
 
 const rooms: Map<RoomId, Room> = new Map()
