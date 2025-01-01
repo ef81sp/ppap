@@ -107,6 +107,9 @@ export const exitRoom = (userToken: UserToken): Room | void => {
   sortParticipants(room)
   roomsUserAt.delete(userToken)
   latestUpdateOfRoom.set(roomId, new Date())
+  if (room.participants.every((u) => u.answer !== "")) {
+    room.isOpen = true
+  }
   return room
 }
 export const closeEmptyRoom = () => {
