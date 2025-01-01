@@ -7,9 +7,9 @@
     "dev:serve": "deno run --watch --allow-net --allow-read --allow-env backend/server.ts"
   },
   "imports": {
-    "vue": "npm:vue@3",
-    "vite": "npm:vite@5",
-    "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@4",
+    "vue": "npm:vue@^3.5.13",
+    "vite": "npm:vite@^6.0.6",
+    "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@^5.2.1",
     "vue-router": "npm:vue-router@4",
     "@vueuse/core": "npm:@vueuse/core@10",
     "tailwindcss": "npm:tailwindcss@3",
@@ -17,6 +17,7 @@
     "autoprefixer": "npm:autoprefixer@^10.4.16",
     "@/": "./"
   },
+  "nodeModulesDir": "auto",
   "fmt": {
     "semiColons": false,
     "lineWidth": 100,
