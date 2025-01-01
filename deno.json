@@ -13,6 +13,8 @@
     "vue-router": "npm:vue-router@4",
     "@vueuse/core": "npm:@vueuse/core@10",
     "tailwindcss": "npm:tailwindcss@3",
+    "postcss": "npm:postcss@^8.4.32",
+    "autoprefixer": "npm:autoprefixer@^10.4.16",
     "@/": "./"
   },
   "fmt": {
@@ -25,8 +27,5 @@
       "tags": ["recommended"]
     },
     "exclude": [".vite/", "dist", "node_modules"]
-  },
-  "compilerOptions": {
-    "types": ["./src/vite-env.d.ts"]
   }
 }
