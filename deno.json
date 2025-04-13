@@ -4,7 +4,15 @@
     "build": "deno run -A --node-modules-dir npm:vite build",
     "preview": "deno run -A --node-modules-dir npm:vite preview",
     "serve": "deno run --allow-net --allow-read --allow-env backend/server.ts",
-    "dev:serve": "deno run --watch --allow-net --allow-read --allow-env backend/server.ts"
+    "dev:serve": "deno run --watch --allow-net --allow-read --allow-env backend/server.ts",
+    "test:e2e": "deno test --allow-all e2e/",
+    "test:e2e:headless": "HEADLESS=true deno test --allow-all e2e/",
+    "test:e2e:browser": "HEADLESS=false deno test --allow-all e2e/",
+    "test:e2e:index": "deno test --allow-all e2e/index.test.ts",
+    "test:e2e:index:browser": "HEADLESS=false deno test --allow-all e2e/index.test.ts",
+    "test:e2e:room": "deno test --allow-all e2e/room.test.ts",
+    "test:e2e:room:browser": "HEADLESS=false deno test --allow-all e2e/room.test.ts",
+    "install-browsers": "deno run -A e2e/install_browsers.ts"
   },
   "imports": {
     "vue": "npm:vue@^3.5.13",
@@ -15,7 +23,11 @@
     "tailwindcss": "npm:tailwindcss@3",
     "postcss": "npm:postcss@^8.4.32",
     "autoprefixer": "npm:autoprefixer@^10.4.16",
-    "@/": "./"
+    "@/": "./",
+    "playwright": "npm:playwright@^1.42.1",
+    "expect": "npm:expect@^29.7.0",
+    "std/": "https://deno.land/std@0.209.0/",
+    "std/assert/": "https://deno.land/std@0.209.0/assert/"
   },
   "nodeModulesDir": "auto",
   "fmt": {
