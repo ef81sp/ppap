@@ -33,8 +33,68 @@ export async function createPage(browser: Browser, url: string = 'http://localho
 export async function isServerRunning(url: string = 'http://localhost:8000'): Promise<boolean> {
   try {
     const res = await fetch(url)
-    return res.status === 200
-  } catch (e) {
+    const result = res.status === 200
+    res.body?.cancel()
+    return result
+  } catch (_e) {
     return false
+  }
+}
+
+// KVストアをクリーンアップする関数
+export async function cleanupKVStore(): Promise<void> {
+  // KVモードでない場合は何もしない
+  if (Deno.env.get("USE_KV_STORE") !== "true") {
+    return;
+  }
+
+  console.log("KVストアをクリーンアップしています...");
+  let kv: Deno.Kv | null = null;
+  try {
+    kv = await Deno.openKv();
+    
+    // rooms, user_rooms, room_updates, socket_instancesのエントリをすべて削除
+    const keysToDelete = [
+      { prefix: ["rooms"] },
+      { prefix: ["user_rooms"] },
+      { prefix: ["room_updates"] },
+      { prefix: ["socket_instances"] },
+    ];
+    
+    for (const keyPattern of keysToDelete) {
+      const entries = kv.list(keyPattern);
+      const batch = [];
+      
+      for await (const entry of entries) {
+        batch.push(entry.key);
+        // バッチサイズが10になったら削除操作を実行
+        if (batch.length >= 10) {
+          const atomicOp = kv.atomic();
+          for (const key of batch) {
+            atomicOp.delete(key);
+          }
+          await atomicOp.commit();
+          batch.length = 0;
+        }
+      }
+      
+      // 残りのエントリを削除
+      if (batch.length > 0) {
+        const atomicOp = kv.atomic();
+        for (const key of batch) {
+          atomicOp.delete(key);
+        }
+        await atomicOp.commit();
+      }
+    }
+    
+    console.log("KVストアのクリーンアップが完了しました");
+  } catch (error) {
+    console.error("KVストアのクリーンアップ中にエラーが発生しました:", error);
+  } finally {
+    // 重要: KVインスタンスをクローズ
+    if (kv) {
+      kv.close();
+    }
   }
 }

@@ -1,6 +1,8 @@
-import { Browser } from "playwright"
+import { Browser as _Browser } from "playwright"
 import { assertEquals, assertExists } from "std/assert/mod.ts"
-import { setupBrowser, createPage, isServerRunning } from "./helpers.ts"
+import { setupBrowser, createPage, isServerRunning, cleanupKVStore } from "./helpers.ts"
+// Testing Libraryをインポート
+import { queries, getDocument } from "playwright-testing-library"
 
 // テストをグループ化してリソースを適切に管理
 Deno.test("トップページのテスト", async (t) => {
@@ -12,59 +14,76 @@ Deno.test("トップページのテスト", async (t) => {
     }
   });
   
+  // テスト開始前にKVストアをクリーンアップ
+  await cleanupKVStore();
+  
   // テスト用のブラウザを一度だけ起動
   const browser = await setupBrowser()
   
   // 各テストケースを実行
   await t.step("トップページが正しく表示されること", async () => {
-    const { page, context } = await createPage(browser)
+    const { page, context: _context } = await createPage(browser)
     
     try {
-      // トップページのタイトルが表示されているか確認
-      const createRoomText = await page.textContent("h2")
-      assertEquals(createRoomText, "Create Room")
+      // Testing Libraryを使用してドキュメントを取得
+      const $document = await getDocument(page)
       
-      // 名前入力フォームが表示されているか確認
-      const nameInput = await page.locator("input[type='text']")
-      assertExists(await nameInput.count())
+      // トップページのタイトルが表示されているか確認
+      const $heading = await queries.getByText($document, "Create Room")
+      assertEquals(await $heading.textContent(), "Create Room")
+      
+      // 名前入力フォームが表示されているか確認 (label属性を使用)
+      const $nameInput = await queries.getByLabelText($document, "Your Name")
+      assertExists($nameInput)
       
       // ボタンが表示されているか確認
-      const createButton = await page.getByText("create room")
-      assertExists(await createButton.count())
+      const $createButton = await queries.getByRole($document, "button", { name: "create room" })
+      assertExists($createButton)
     } finally {
       // 必ずページとコンテキストをクローズ
       await page.close()
-      await context.close()
+      await _context.close()
     }
   });
 
   await t.step("ユーザー名を入力してルームを作成できること", async () => {
-    const { page, context } = await createPage(browser)
+    const { page, context: _context } = await createPage(browser)
     
     try {
+      // Testing Libraryを使用してドキュメントを取得
+      const $document = await getDocument(page)
+      
       // 名前を入力
-      await page.fill("input[type='text']", "TestUser")
+      const $nameInput = await queries.getByLabelText($document, "Your Name")
+      await $nameInput.fill("TestUser")
       
       // フォームを送信
-      await page.click("button")
+      const $createButton = await queries.getByRole($document, "button", { name: "create room" })
+      await $createButton.click()
       
       // URLが変わるのを待つ (ルームに遷移したことを確認)
       await page.waitForURL(/\/#\/[a-z0-9\-]+/)
       
+      // 新しいドキュメントを取得（ページ遷移後）
+      const $newDocument = await getDocument(page)
+      
       // ルームページに移動したことを確認
-      const roomTitleText = await page.textContent("h2")
-      assertEquals(roomTitleText, "Room")
+      const $roomTitle = await queries.getByRole($newDocument, "heading", { name: "Room" })
+      assertEquals(await $roomTitle.textContent(), "Room")
       
       // コピーURLボタンが表示されているか確認
-      const copyUrlButton = await page.getByText("copy URL")
-      assertExists(await copyUrlButton.count())
+      const $copyUrlButton = await queries.getByRole($newDocument, "button", { name: "copy URL" })
+      assertExists($copyUrlButton)
     } finally {
       // 必ずページとコンテキストをクローズ
       await page.close()
-      await context.close()
+      await _context.close()
     }
   });
   
   // テスト完了後にブラウザを閉じる
   await browser.close()
+  
+  // テスト完了後にKVストアをクリーンアップ
+  await cleanupKVStore();
 });

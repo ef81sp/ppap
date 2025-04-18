@@ -4,6 +4,7 @@
     "build": "deno run -A --node-modules-dir npm:vite build",
     "preview": "deno run -A --node-modules-dir npm:vite preview",
     "serve": "deno run --allow-net --allow-read --allow-env backend/server.ts",
+    "serve:kv": "USE_KV_STORE=true deno run --unstable-kv --allow-net --allow-read --allow-env backend/server.ts",
     "dev:serve": "deno run --watch --allow-net --allow-read --allow-env backend/server.ts",
     "test:e2e": "deno test --allow-all e2e/",
     "test:e2e:headless": "HEADLESS=true deno test --allow-all e2e/",
@@ -12,7 +13,13 @@
     "test:e2e:index:browser": "HEADLESS=false deno test --allow-all e2e/index.test.ts",
     "test:e2e:room": "deno test --allow-all e2e/room.test.ts",
     "test:e2e:room:browser": "HEADLESS=false deno test --allow-all e2e/room.test.ts",
-    "install-browsers": "deno run -A e2e/install_browsers.ts"
+    "install-browsers": "deno run -A e2e/install_browsers.ts",
+    "deploy:build": "deno run -A --node-modules-dir npm:vite build",
+    "deploy:serve": "USE_KV_STORE=true deno run --unstable-kv --allow-net --allow-read --allow-env deploy-entry.ts",
+    "deploy": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net deploy.ts",
+    "kv:view": "deno run --unstable-kv --allow-read --allow-env tools/kv-explorer.ts",
+    "kv:view-rooms": "deno run --unstable-kv --allow-read --allow-env tools/kv-explorer.ts rooms",
+    "kv:view-socket-instances": "deno run --unstable-kv --allow-read --allow-env tools/kv-explorer.ts socket_instances"
   },
   "imports": {
     "vue": "npm:vue@^3.5.13",
@@ -26,10 +33,15 @@
     "@/": "./",
     "playwright": "npm:playwright@^1.42.1",
     "expect": "npm:expect@^29.7.0",
+    "@testing-library/dom": "npm:@testing-library/dom@^9.3.4",
+    "playwright-testing-library": "npm:playwright-testing-library@^4.1.0",
     "std/": "https://deno.land/std@0.209.0/",
     "std/assert/": "https://deno.land/std@0.209.0/assert/"
   },
   "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "lib": ["deno.unstable", "deno.ns", "dom", "dom.iterable", "dom.asynciterable"]
+  },
   "fmt": {
     "semiColons": false,
     "lineWidth": 100,

@@ -1,34 +1,34 @@
 import { serveDir } from "https://deno.land/std@0.209.0/http/file_server.ts"
-import { addSocket } from "./store/sockets.ts"
+import { addSocket } from "./store/index.ts"
 import { genMsgConnected } from "@/wsMsg/msgFromServer.ts"
 import { closeHandler, socketMessageHandler } from "./socketMessageHandler.ts"
 
-function handler(request: Request): Promise<Response> {
+async function handler(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url)
   if (request.headers.get("upgrade") === "websocket") {
     const { socket, response } = Deno.upgradeWebSocket(request)
 
     const userToken = crypto.randomUUID()
-    socket.onopen = () => {
+    socket.onopen = async () => {
       console.log(`CONNECTED: ${userToken}`)
-      addSocket(userToken, socket)
+      await addSocket(userToken, socket)
       socket.send(JSON.stringify(genMsgConnected(userToken)))
     }
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       if (event.data.includes("ping")) {
         socket.send("pong")
       } else {
-        socketMessageHandler(event, socket)
+        await socketMessageHandler(event, socket)
       }
     }
 
-    socket.onclose = () => {
-      closeHandler(userToken)
+    socket.onclose = async () => {
+      await closeHandler(userToken)
     }
-    socket.onerror = (error) => {
+    socket.onerror = async (error) => {
       console.error("ERROR:", error)
-      closeHandler(userToken)
+      await closeHandler(userToken)
     }
 
     return Promise.resolve(response)
