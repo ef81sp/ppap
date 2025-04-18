@@ -31,6 +31,6 @@ jobs:
         with:
           project: "ppap"
           entrypoint: "backend/server.ts"
-          root: ""
+          root: "."
           
           
