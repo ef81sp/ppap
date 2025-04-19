@@ -25,4 +25,5 @@ export interface SocketStore {
   getSocket(userToken: UserToken): WebSocket | undefined;
   addSocket(userToken: UserToken, socket: WebSocket): Promise<void>;
   deleteSocket(userToken: UserToken): Promise<void>;
+  cleanupStaleSocketInstances(): Promise<void>;
 }

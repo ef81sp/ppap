@@ -10,7 +10,11 @@ import { KVSocketStore } from './kvSocketStore.ts';
 export class KVRoomStore implements RoomStore {
   private kv: Deno.Kv | null = null;
   private cleanupIntervalId: number | undefined;
-  private watcherController: AbortController | null = null;
+  // ルームごとのWatcherを管理
+  private roomWatchers: Map<RoomId, {
+    stream: ReadableStream<Deno.KvEntryMaybe<Room>[]>;
+    active: boolean;
+  }> = new Map();
 
   constructor() {
     // 5分に1回、30分間更新のないルームを閉じる
@@ -19,9 +23,6 @@ export class KVRoomStore implements RoomStore {
       console.log('polling kv store...');
       await this.cleanupIdleRooms(thresholdMs);
     }, 5 * 1000 * 60);
-
-    // KV Watch APIによるルーム変更の監視をセットアップ
-    this.setupRoomWatcher();
   }
 
   // KVインスタンスの遅延初期化
@@ -31,104 +32,125 @@ export class KVRoomStore implements RoomStore {
     }
   }
 
-  // KV Watchの設定
-  private async setupRoomWatcher(): Promise<void> {
+  // 特定のルームに対するWatchを設定
+  private async watchRoom(roomId: RoomId): Promise<void> {
+    // 既に監視中なら何もしない
+    if (this.roomWatchers.get(roomId)?.active) {
+      console.log(`Room ${roomId.slice(0, 6)}... is already being watched`);
+      return;
+    }
+
     await this.ensureKV();
     
-    // 既存のWatcherがあれば中止
-    if (this.watcherController) {
-      this.watcherController.abort();
-    }
-    
-    this.watcherController = new AbortController();
-    
-    console.log("Setting up KV room watcher...");
-    
     try {
-      // watchの開始 - エラーハンドリングを強化
-      const watcher = this.kv!.watch([["rooms"]]);
+      console.log(`Setting up watcher for room ${roomId.slice(0, 6)}...`);
       
-      // 変更を監視して処理（非同期で実行）
+      // このルームに特化したwatchを設定
+      const stream = this.kv!.watch<[Room]>([["rooms", roomId]]);
+
+      // 監視情報を保存
+      this.roomWatchers.set(roomId, { stream, active: true });
+      
+      // 非同期でwatcherを処理
       (async () => {
         try {
-          console.log("KV watcher started");
-          for await (const entries of watcher) {
-            // watcherコントローラでアボートされていたらループを抜ける
-            if (this.watcherController?.signal.aborted) {
-              console.log("KV watcher aborted");
+          console.log(`KV watcher for room ${roomId.slice(0, 6)}... started`);
+          
+          for await (const entries of stream) {
+            // アクティブでなくなったらループを抜ける
+            if (!this.roomWatchers.get(roomId)?.active) {
+              console.log(`KV watcher for room ${roomId.slice(0, 6)}... stopped`);
               break;
             }
             
-            // エントリが空の場合はスキップ (型安全な比較に変更)
-            if (!entries || entries.length <= 0) {
+            // エントリが空の場合はスキップ
+            if (!entries) {
               continue;
             }
             
-            console.log(`Detected ${entries.length} changes in KV store`);
+            console.log(`Detected changes for room ${roomId.slice(0, 6)}...`);
             
             for (const entry of entries) {
               try {
-                if (!entry.key || entry.key.length < 2) {
-                  console.log("Invalid key format:", entry.key);
-                  continue;
-                }
-                
-                const [prefix, roomId] = entry.key as [string, RoomId];
-                if (prefix !== "rooms" || !roomId) {
-                  console.log("Skipping non-room entry:", entry.key);
-                  continue;
-                }
+                if (!entry.value) continue;
                 
                 const room = entry.value as Room;
-                if (!room) {
-                  console.log("Room value is null or undefined");
-                  continue;
-                }
-                
-                console.log(`Room change detected: ${roomId}`);
-                // ローカルインスタンスのユーザーに変更を通知
                 await this.notifyLocalUsersAboutRoomChange(room);
               } catch (entryError) {
-                console.error("Error processing entry:", entryError);
+                console.error(`Error processing room ${roomId.slice(0, 6)}... update:`, entryError);
               }
             }
           }
-          console.log("KV watcher loop ended normally");
+          
+          console.log(`KV watcher loop for room ${roomId.slice(0, 6)}... ended normally`);
+          // ループが正常に終了した場合も監視状態を更新
+          this.roomWatchers.delete(roomId);
+          
         } catch (error: unknown) {
-          // エラー型を明示的に処理
-          const err = error as Error;
-          if (err.name === "AbortError") {
-            console.log("KV watcher aborted:", err.message);
-          } else {
-            console.error("KV Watch error:", err);
-            
-            // エラー発生から3秒後に監視を再開
-            setTimeout(() => {
-              console.log("Attempting to restart KV watcher after error...");
-              this.setupRoomWatcher().catch(e => 
-                console.error("Failed to restart KV watcher:", e)
-              );
-            }, 3000);
-          }
+          // エラー処理
+          console.error(`KV watcher error for room ${roomId.slice(0, 6)}...:`, error);
+          
+          // ウォッチャーを削除
+          this.roomWatchers.delete(roomId);
+          
+          // 3秒後に再接続を試みる
+          setTimeout(() => {
+            console.log(`Attempting to restart watcher for room ${roomId.slice(0, 6)}...`);
+            this.watchRoom(roomId).catch(e => 
+              console.error(`Failed to restart watcher for room ${roomId.slice(0, 6)}...:`, e)
+            );
+          }, 3000);
         }
       })();
-    } catch (error) {
-      console.error("Failed to setup room watcher:", error);
       
-      // セットアップエラー発生から5秒後に再試行
-      setTimeout(() => {
-        console.log("Attempting to restart KV watcher after setup error...");
-        this.setupRoomWatcher().catch(e => 
-          console.error("Failed to restart KV watcher:", e)
-        );
-      }, 5000);
+    } catch (error) {
+      console.error(`Failed to setup watcher for room ${roomId.slice(0, 6)}...:`, error);
+      // エラー発生時はウォッチャーをセットしない
+      this.roomWatchers.delete(roomId);
     }
+  }
+
+  // 特定のルームのWatchを停止する
+  private async stopWatchingRoom(roomId: RoomId): Promise<void> {
+    const watcher = this.roomWatchers.get(roomId);
+    if (watcher) {
+      console.log(`Stopping watcher for room ${roomId.slice(0, 6)}...`);
+      
+      try {
+        // ストリームを直接キャンセルするのではなく、フラグをfalseにして
+        // for-awaitループが自然に終了するのを待つ
+        watcher.active = false;
+        
+        // Mapからすぐに削除する（新しいウォッチャー作成を許可するため）
+        this.roomWatchers.delete(roomId);
+        
+        console.log(`Watcher for room ${roomId.slice(0, 6)}... marked inactive`);
+      } catch (error) {
+        console.error(`Error stopping watcher for room ${roomId.slice(0, 6)}...:`, error);
+        // エラーが発生しても確実にMapから削除
+        this.roomWatchers.delete(roomId);
+      }
+    }
+  }
+
+  // 参加したルームを必要に応じてWatchする
+  private async checkAndWatchRoom(roomId: RoomId): Promise<void> {
+    // 既に監視中なら何もしない
+    if (this.roomWatchers.get(roomId)?.active) {
+      console.log(`Room ${roomId.slice(0, 6)}... is already being watched`);
+      return;
+    }
+    
+    // 監視開始
+    await this.watchRoom(roomId);
   }
 
   // このインスタンスに関連するユーザーにのみルーム変更を通知
   private async notifyLocalUsersAboutRoomChange(room: Room): Promise<void> {
     const socketStore = getStoreManager().getSocketStore() as KVSocketStore;
     const instanceId = socketStore.getInstanceId();
+    
+    console.log(`Checking room ${room.id.slice(0, 6)}... participants for instance ${instanceId.slice(0, 6)}...`);
 
     for (const participant of room.participants) {
       try {
@@ -137,9 +159,15 @@ export class KVRoomStore implements RoomStore {
           participant.token
         );
 
+        if (!userInstanceId) {
+          console.log(`User ${participant.token.slice(0, 6)}... has no associated instance`);
+          continue;
+        }
+
+        // ローカルインスタンスのユーザーかどうか確認
         if (userInstanceId === instanceId) {
           const socket = socketStore.getSocket(participant.token);
-          if (socket) {
+          if (socket && socket.readyState === WebSocket.OPEN) {
             // このインスタンスのユーザーにメッセージを送信
             const roomForClient: RoomForClientSide = {
               ...room,
@@ -154,12 +182,23 @@ export class KVRoomStore implements RoomStore {
             const msg = genMsgRoomInfo(roomForClient);
             socket.send(JSON.stringify(msg));
             console.log(
-              `Notified local user ${participant.token.slice(
-                0,
-                6
-              )}... about room change`
+              `Notified local user ${participant.token.slice(0, 6)}... about room ${room.id.slice(0, 6)}... change via watch`
             );
+          } else {
+            console.log(
+              `User ${participant.token.slice(0, 6)}... has no active socket or socket is not open`
+            );
+            
+            // ソケットがない場合、KVストアから該当ユーザーの情報をクリーンアップ
+            if (!socket) {
+              console.log(`Cleaning up stale socket instance reference for ${participant.token.slice(0, 6)}...`);
+              await socketStore.deleteSocket(participant.token);
+            }
           }
+        } else {
+          console.log(
+            `User ${participant.token.slice(0, 6)}... belongs to instance ${userInstanceId.slice(0, 6)}..., not this instance`
+          );
         }
       } catch (error) {
         console.error(
@@ -185,7 +224,7 @@ export class KVRoomStore implements RoomStore {
     }
 
     for (const roomId of idleRoomIds) {
-      console.log('room closed:', roomId);
+      console.log('room closed due to inactivity:', roomId);
       await this.closeRoom(roomId);
     }
   }
@@ -218,6 +257,10 @@ export class KVRoomStore implements RoomStore {
     }
 
     console.log('room created in KV:', roomId);
+    
+    // ルーム作成後にWatchを開始
+    await this.watchRoom(roomId);
+    
     return room;
   }
 
@@ -259,6 +302,9 @@ export class KVRoomStore implements RoomStore {
       throw new Error('Failed to enter room in KV store');
     }
 
+    // ルーム参加時にルームがまだWatchされていない場合はWatchを開始
+    await this.checkAndWatchRoom(roomId);
+    
     return room;
   }
 
@@ -349,6 +395,11 @@ export class KVRoomStore implements RoomStore {
       throw new Error('Failed to exit room in KV store');
     }
 
+    // 参加者が0人になった場合は、Watchを解除する
+    if (room.participants.length === 0) {
+      await this.stopWatchingRoom(roomId);
+    }
+
     return room;
   }
 
@@ -373,7 +424,9 @@ export class KVRoomStore implements RoomStore {
 
       const result = await atomicOp.commit();
       if (result.ok) {
-        console.log('room closed:', roomId);
+        console.log('empty room closed:', roomId);
+        // Watchを停止
+        await this.stopWatchingRoom(roomId);
       }
     }
   }
@@ -406,6 +459,12 @@ export class KVRoomStore implements RoomStore {
     atomicOp.delete(['room_updates', roomId]);
 
     await atomicOp.commit();
+    
+    // ルームが削除されるためWatchも停止
+    await this.stopWatchingRoom(roomId);
+    
+    // ルームクローズ時に不要なsocket_instancesエントリもクリーンアップ
+    await getStoreManager().getSocketStore().cleanupStaleSocketInstances();
   }
 
   private sortParticipants(room: Room): void {

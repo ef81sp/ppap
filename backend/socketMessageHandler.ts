@@ -86,22 +86,25 @@ export const broadcastRoomInfo = (room: Room) => {
 
   console.log(`BROADCAST: ${room.id} (${isKVMode ? "KV mode" : "Memory mode"})`);
 
-  // テスト環境では、KVモードでもWatch APIを待たずに直接ブロードキャストする
-  // これにより、テストの安定性を確保する
-  // for (const participant of room.participants) {
-  //   const socket = getSocket(participant.token)
-  //   if (socket == undefined) continue
-  //   const msg = genMsgRoomInfo(genRoomForClientSide(room, participant.token))
-  //   socket.send(JSON.stringify(msg))
-  // }
-  
-  // メモリモードの場合も、KVモードの場合も同様に処理
-  // KVモードのWatchは補助的な役割として使用
-  for (const participant of room.participants) {
-    const socket = getSocket(participant.token)
-    if (socket == undefined) continue
-    const msg = genMsgRoomInfo(genRoomForClientSide(room, participant.token))
-    socket.send(JSON.stringify(msg))
+  // KVモードではWatch API経由で通知するためローカルインスタンスのユーザーにのみ直接通知
+  // メモリモードでは全てのユーザーに直接通知
+  if (isKVMode) {
+    // KVモードでは、ローカルインスタンスに接続しているユーザーにのみ直接通知
+    for (const participant of room.participants) {
+      const socket = getSocket(participant.token)
+      if (socket == undefined) continue
+      const msg = genMsgRoomInfo(genRoomForClientSide(room, participant.token))
+      console.log(`Direct notify to local user: ${participant.token.slice(0, 6)}...`);
+      socket.send(JSON.stringify(msg))
+    }
+  } else {
+    // メモリモードでは全ユーザーに直接通知
+    for (const participant of room.participants) {
+      const socket = getSocket(participant.token)
+      if (socket == undefined) continue
+      const msg = genMsgRoomInfo(genRoomForClientSide(room, participant.token))
+      socket.send(JSON.stringify(msg))
+    }
   }
 }
 

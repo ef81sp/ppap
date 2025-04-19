@@ -3,7 +3,7 @@ import { addSocket } from "./store/index.ts"
 import { genMsgConnected } from "@/wsMsg/msgFromServer.ts"
 import { closeHandler, socketMessageHandler } from "./socketMessageHandler.ts"
 
-async function handler(request: Request): Promise<Response> {
+function handler(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url)
   if (request.headers.get("upgrade") === "websocket") {
     const { socket, response } = Deno.upgradeWebSocket(request)

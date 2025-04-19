@@ -20,4 +20,10 @@ export class MemorySocketStore implements SocketStore {
       console.log("deleted socket: ", userToken);
     }
   }
+  
+  // メモリモードでは特に追加のクリーンアップは不要だが、インターフェース互換性のために実装
+  async cleanupStaleSocketInstances(): Promise<void> {
+    // メモリモードではsocket_instancesを使用しないため何もしない
+    return Promise.resolve();
+  }
 }
