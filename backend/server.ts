@@ -1,7 +1,16 @@
 import { serveDir } from "https://deno.land/std@0.209.0/http/file_server.ts"
+import { cron } from "https://deno.land/x/deno_cron@v1.0.0/cron.ts"
 import { addSocket } from "./store/index.ts"
 import { genMsgConnected } from "@/wsMsg/msgFromServer.ts"
 import { closeHandler, socketMessageHandler } from "./socketMessageHandler.ts"
+import { cleanupOldKvRecords } from "./kvCleanupJob.ts"
+
+// KVモードで実行されている場合のみcronジョブを登録
+if (Deno.env.get("USE_KV_STORE") === "true") {
+  console.log("KVモードで実行中: cronジョブを登録します")
+  // 2日に1回、古いKVレコードを削除するcronジョブをスケジュール
+  cron("0 0 */2 * *", cleanupOldKvRecords)
+}
 
 function handler(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url)
