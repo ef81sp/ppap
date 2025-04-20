@@ -8,7 +8,7 @@ import { cleanupOldKvRecords } from './kvCleanupJob.ts';
 if (Deno.env.get('USE_KV_STORE') === 'true') {
   console.log('KVモードで実行中: cronジョブを登録します');
   // 2日に1回、古いKVレコードを削除するcronジョブをスケジュール
-  Deno.cron('古いレコードのクリーンアップ', '0 0 */2 * *', () => {
+  Deno.cron('clean up old records', '0 0 */2 * *', () => {
     cleanupOldKvRecords();
   });
 }
