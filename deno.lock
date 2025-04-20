@@ -1703,6 +1703,9 @@
       "integrity": "sha512-+hSoy/QHluxmC9kCIJyL/uyFmLmc+e5CFR5Wa+bpIhIj85LVb9ZH2nVnqrHoSvKogwODv0ClqZkmiSSaIH5LTA=="
     }
   },
+  "redirects": {
+    "https://deno.land/x/deno_cron/cron.ts": "https://deno.land/x/deno_cron@v1.0.0/cron.ts"
+  },
   "remote": {
     "https://deno.land/std@0.209.0/assert/_constants.ts": "8a9da298c26750b28b326b297316cdde860bc237533b07e1337c021379e6b2a9",
     "https://deno.land/std@0.209.0/assert/_diff.ts": "2c9371f17cf08cbb843c924bc31ca77af422ec4fe162f73d42c651d547573fa8",
@@ -1829,7 +1832,8 @@
     "https://deno.land/std@0.209.0/path/windows/to_file_url.ts": "8e9ea9e1ff364aa06fa72999204229952d0a279dbb876b7b838b2b2fea55cce3",
     "https://deno.land/std@0.209.0/path/windows/to_namespaced_path.ts": "e0f4d4a5e77f28a5708c1a33ff24360f35637ba6d8f103d19661255ef7bfd50d",
     "https://deno.land/std@0.209.0/streams/byte_slice_stream.ts": "ecf523d7ff665d554100de981058c60f5207ab718319244f7c742d9e1194fa64",
-    "https://deno.land/std@0.209.0/version.ts": "6d941038078dd4970fbfe4f7cf92458aaf10519d9ab0610183e36462adffcaba"
+    "https://deno.land/std@0.209.0/version.ts": "6d941038078dd4970fbfe4f7cf92458aaf10519d9ab0610183e36462adffcaba",
+    "https://deno.land/x/deno_cron@v1.0.0/cron.ts": "7f984d0c4c7ac4fb1ad3cd241d457e7808a9362735d910abb02dc689883ee3ef"
   },
   "workspace": {
     "dependencies": [
