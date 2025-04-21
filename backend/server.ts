@@ -26,7 +26,7 @@ function handler(request: Request): Promise<Response> {
     };
 
     socket.onmessage = async event => {
-      if (event.data.includes('ping')) {
+      if (event.data?.includes('ping')) {
         socket.send('pong');
       } else {
         await socketMessageHandler(event, socket);
