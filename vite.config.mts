@@ -1,10 +1,6 @@
 import { defineConfig } from "vite"
 import vue from "@vitejs/plugin-vue"
-import {
-  fromFileUrl,
-  dirname,
-  join,
-} from "https://deno.land/std@0.209.0/path/mod.ts"
+import { dirname, fromFileUrl, join } from "https://deno.land/std@0.209.0/path/mod.ts"
 import "vue"
 import "@vueuse/core"
 import "vue-router"
