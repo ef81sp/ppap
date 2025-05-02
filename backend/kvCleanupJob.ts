@@ -12,8 +12,8 @@ import { Room } from "@/backend/type.ts"
  * @returns クリーンアップ結果 { cleanedRooms: 削除したルーム数, cleanedSockets: 削除したソケット数 }
  */
 export async function cleanupOldKvRecords(options?: {
-  thresholdMs?: number;
-  kvInstance?: Deno.Kv;
+  thresholdMs?: number
+  kvInstance?: Deno.Kv
 }) {
   console.log("Starting scheduled cleanup of old KV records...")
   const kv = options?.kvInstance || await Deno.openKv()
@@ -26,7 +26,7 @@ export async function cleanupOldKvRecords(options?: {
   try {
     // 古いルームを rooms list から直接チェック (room_updates を廃止)
     const roomEntries = kv.list<Room>({ prefix: ["rooms"] })
-    const oldRooms: Array<{ roomId: string; participants: Room['participants'] }> = []
+    const oldRooms: Array<{ roomId: string; participants: Room["participants"] }> = []
     for await (const entry of roomEntries) {
       const [, roomId] = entry.key as [string, string]
       const room = entry.value as Room
@@ -79,8 +79,10 @@ export async function cleanupOldKvRecords(options?: {
       cleanedSockets++
     }
 
-    console.log(`Scheduled cleanup completed: Deleted ${cleanedRooms} old rooms and ${cleanedSockets} socket instances`)
-    
+    console.log(
+      `Scheduled cleanup completed: Deleted ${cleanedRooms} old rooms and ${cleanedSockets} socket instances`,
+    )
+
     // テスト用に結果を返す
     return { cleanedRooms, cleanedSockets }
   } catch (error) {

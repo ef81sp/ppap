@@ -81,10 +81,10 @@ export const broadcastRoomInfo = (room: Room) => {
   })
 
   // StoreManagerからKVモードかどうか確認
-  const storeManager = getStoreManager();
-  const isKVMode = storeManager.isUsingKV();
+  const storeManager = getStoreManager()
+  const isKVMode = storeManager.isUsingKV()
 
-  console.log(`BROADCAST: ${room.id} (${isKVMode ? "KV mode" : "Memory mode"})`);
+  console.log(`BROADCAST: ${room.id} (${isKVMode ? "KV mode" : "Memory mode"})`)
 
   // KVモードではWatch API経由で通知するためローカルインスタンスのユーザーにのみ直接通知
   // メモリモードでは全てのユーザーに直接通知
@@ -94,7 +94,7 @@ export const broadcastRoomInfo = (room: Room) => {
       const socket = getSocket(participant.token)
       if (socket == undefined) continue
       const msg = genMsgRoomInfo(genRoomForClientSide(room, participant.token))
-      console.log(`Direct notify to local user: ${participant.token.slice(0, 6)}...`);
+      console.log(`Direct notify to local user: ${participant.token.slice(0, 6)}...`)
       socket.send(JSON.stringify(msg))
     }
   } else {
