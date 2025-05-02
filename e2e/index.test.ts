@@ -1,17 +1,14 @@
 import { Browser as _Browser } from "playwright"
 import { assertEquals, assertExists } from "std/assert/mod.ts"
-import { setupBrowser, createPage, isServerRunning, cleanupKVStore } from "./helpers.ts"
+import { setupBrowser, createPage, startServer, stopServer, cleanupKVStore } from "./helpers.ts"
 // Testing Libraryをインポート
 import { queries, getDocument } from "playwright-testing-library"
 
 // テストをグループ化してリソースを適切に管理
 Deno.test("トップページのテスト", async (t) => {
-  // テスト開始前にサーバーが起動しているか確認
-  await t.step("サーバー接続確認", async () => {
-    const server = await isServerRunning()
-    if (!server) {
-      throw new Error("テスト実行前にサーバーを起動してください: deno task serve")
-    }
+  // テスト開始前にサーバーを自動起動
+  await t.step("サーバー起動", async () => {
+    await startServer();
   });
   
   // テスト開始前にKVストアをクリーンアップ
@@ -86,4 +83,6 @@ Deno.test("トップページのテスト", async (t) => {
   
   // テスト完了後にKVストアをクリーンアップ
   await cleanupKVStore();
+  // サーバー停止
+  await stopServer();
 });

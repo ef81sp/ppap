@@ -5,7 +5,11 @@ import { Room } from "../backend/type.ts";
 // テスト用の一時的なKVパスを設定
 const tempKvPath = `./temp-kv-${Date.now()}.sqlite`;
 
-Deno.test("KV Cleanup Job E2E Test", async (t) => {
+// Skip test if Deno.openKv is unavailable (requires unstable flag)
+Deno.test({
+  name: "KV Cleanup Job E2E Test",
+  ignore: typeof Deno.openKv !== 'function',
+}, async (t) => {
   // テスト用のKVインスタンスを作成
   const kv = await Deno.openKv(tempKvPath);
 
@@ -13,6 +17,8 @@ Deno.test("KV Cleanup Job E2E Test", async (t) => {
     await t.step("古いレコードが削除され、新しいレコードは残ること", async () => {
       // テストデータ（古いルーム）の作成
       const oldRoomId = "old-room-" + crypto.randomUUID();
+      // 古い更新日時を設定（30秒前）
+      const oldDate = new Date(Date.now() - 30000);
       const oldRoom: Room = {
         id: oldRoomId,
         participants: [{
@@ -21,6 +27,7 @@ Deno.test("KV Cleanup Job E2E Test", async (t) => {
           answer: "",
         }],
         isOpen: false,
+        updatedAt: oldDate,
       };
 
       // テストデータ（新しいルーム）の作成
@@ -33,13 +40,13 @@ Deno.test("KV Cleanup Job E2E Test", async (t) => {
           answer: "",
         }],
         isOpen: false,
+        updatedAt: new Date(),
       };
 
       // 古いデータをKVに保存（更新日時を過去に設定）
       await kv.set(["rooms", oldRoomId], oldRoom);
       await kv.set(["user_rooms", "old-user-token"], oldRoomId);
       // 古いルームは30秒前に更新されたことにする
-      const oldDate = new Date(Date.now() - 30000);
       await kv.set(["room_updates", oldRoomId], oldDate);
       await kv.set(["socket_instances", "old-user-token"], "instance-id");
 

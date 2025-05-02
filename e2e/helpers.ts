@@ -1,5 +1,60 @@
 import { chromium, firefox, webkit, Browser, BrowserContext, Page } from "playwright"
 
+// サーバー起動用プロセスハンドル
+let serverProcess: Deno.ChildProcess | null = null;
+
+/**
+ * テスト用サーバーを自動起動
+ */
+export async function startServer(): Promise<void> {
+  if (serverProcess) return;
+  // Deno 実行ファイルパスを使って直接サーバーを起動
+  serverProcess = new Deno.Command(Deno.execPath(), {
+    args: [
+      "run",
+      "--allow-net",
+      "--allow-read",
+      "--allow-env",
+      // cronジョブを使わない場合は flags を外す
+      ...[],
+      "backend/server.ts"
+    ],
+    stdout: "null",
+    stderr: "null",
+  }).spawn();
+  // サーバー応答可能になるまで待機
+  const maxRetries = 20;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const res = await fetch("http://localhost:8000");
+      // 不要なレスポンスボディをキャンセルしてリークを防ぐ
+      res.body?.cancel();
+      if (res.ok) return;
+    } catch (_e) {
+      // 応答なし
+    }
+    await new Promise(r => setTimeout(r, 500));
+  }
+  throw new Error("サーバー起動に失敗しました");
+}
+
+/**
+ * テスト用サーバーを停止
+ */
+export async function stopServer(): Promise<void> {
+  try {
+    if (!serverProcess) return;
+    // サーバーを終了
+    serverProcess.kill("SIGTERM");
+    // 終了を待機 (statusはプロパティのPromise)
+    await serverProcess.status;
+  } catch {
+    // kill or status時のエラーは無視
+  } finally {
+    serverProcess = null;
+  }
+}
+
 // E2Eテスト用のヘルパー関数
 export async function setupBrowser(browserName: string = 'chromium'): Promise<Browser> {
   const browsers = {
