@@ -221,12 +221,14 @@ export class KVRoomStore implements RoomStore {
   private async cleanupIdleRooms(thresholdMs: number): Promise<void> {
     await this.ensureKV();
     const now = Date.now();
-    const entries = this.kv!.list<Date>({ prefix: ['room_updates'] });
+    const entries = this.kv!.list<Room>({ prefix: ['rooms'] });
     const idleRoomIds: RoomId[] = [];
 
     for await (const entry of entries) {
       const [, roomId] = entry.key as [string, RoomId];
-      if (now - entry.value.getTime() > thresholdMs) {
+      const room = entry.value;
+      if (!room) continue;
+      if (now - room.updatedAt.getTime() > thresholdMs) {
         idleRoomIds.push(roomId);
       }
     }
@@ -241,6 +243,7 @@ export class KVRoomStore implements RoomStore {
     await this.ensureKV();
 
     const roomId = crypto.randomUUID();
+    const nowDate = new Date();
     const room: Room = {
       id: roomId,
       participants: [
@@ -251,13 +254,13 @@ export class KVRoomStore implements RoomStore {
         },
       ],
       isOpen: false,
+      updatedAt: nowDate,
     };
 
     // トランザクションで原子的に更新
     const atomicOp = this.kv!.atomic();
     atomicOp.set(['rooms', roomId], room);
     atomicOp.set(['user_rooms', userToken], roomId);
-    atomicOp.set(['room_updates', roomId], new Date());
 
     const result = await atomicOp.commit();
     if (!result.ok) {
@@ -298,12 +301,13 @@ export class KVRoomStore implements RoomStore {
       answer: '',
     });
     this.sortParticipants(room);
+    // タイムスタンプ更新
+    room.updatedAt = new Date();
 
     // トランザクションで原子的に更新
     const atomicOp = this.kv!.atomic();
     atomicOp.set(['rooms', roomId], room);
     atomicOp.set(['user_rooms', userToken], roomId);
-    atomicOp.set(['room_updates', roomId], new Date());
 
     const result = await atomicOp.commit();
     if (!result.ok) {
@@ -337,10 +341,11 @@ export class KVRoomStore implements RoomStore {
       room.isOpen = true;
     }
 
+    // 更新日時をセット
+    room.updatedAt = new Date();
     // KVに更新を保存
     const atomicOp = this.kv!.atomic();
     atomicOp.set(['rooms', roomId], room);
-    atomicOp.set(['room_updates', roomId], new Date());
 
     const result = await atomicOp.commit();
     if (!result.ok) {
@@ -361,10 +366,11 @@ export class KVRoomStore implements RoomStore {
     }
     room.isOpen = false;
 
+    // 更新日時をセット
+    room.updatedAt = new Date();
     // KVに更新を保存
     const atomicOp = this.kv!.atomic();
     atomicOp.set(['rooms', roomId], room);
-    atomicOp.set(['room_updates', roomId], new Date());
 
     const result = await atomicOp.commit();
     if (!result.ok) {
@@ -392,10 +398,11 @@ export class KVRoomStore implements RoomStore {
       room.isOpen = true;
     }
 
+    // 更新日時をセット
+    room.updatedAt = new Date();
     // トランザクションで原子的に更新
     const atomicOp = this.kv!.atomic();
     atomicOp.set(['rooms', roomId], room);
-    atomicOp.set(['room_updates', roomId], new Date());
     atomicOp.delete(['user_rooms', userToken]);
 
     const result = await atomicOp.commit();
@@ -428,7 +435,6 @@ export class KVRoomStore implements RoomStore {
     for (const roomId of emptyRoomIds) {
       const atomicOp = this.kv!.atomic();
       atomicOp.delete(['rooms', roomId]);
-      atomicOp.delete(['room_updates', roomId]);
 
       const result = await atomicOp.commit();
       if (result.ok) {
@@ -464,7 +470,6 @@ export class KVRoomStore implements RoomStore {
 
     // 部屋自体を削除
     atomicOp.delete(['rooms', roomId]);
-    atomicOp.delete(['room_updates', roomId]);
 
     await atomicOp.commit();
 
