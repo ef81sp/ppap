@@ -11,8 +11,6 @@ export type Room = {
   id: string
   participants: User[]
   isOpen: boolean
-  // 最終更新日時
-  updatedAt: Date
 }
 
 export type UserForClientSide = {
