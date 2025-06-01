@@ -1,10 +1,6 @@
 import { RoomForClientSide, RoomId, UserToken } from "@/backend/type.ts"
 
-export type MsgFromServer =
-  | MsgConnected
-  | MsgRoomCreated
-  | MsgIsExistTheRoomResult
-  | MsgRoomInfo
+export type MsgFromServer = MsgConnected | MsgRoomInfo
 
 const _msgType = {
   connected: "connected",
@@ -16,14 +12,7 @@ type MsgConnected = {
   type: (typeof _msgType)["connected"]
   userToken: string
 }
-type MsgRoomCreated = {
-  type: (typeof _msgType)["roomCreated"]
-  roomId: string
-}
-type MsgIsExistTheRoomResult = {
-  type: (typeof _msgType)["isExistTheRoomResult"]
-  isExistTheRoom: boolean
-}
+
 type MsgRoomInfo = {
   type: (typeof _msgType)["roomInfo"]
   room: RoomForClientSide
@@ -49,16 +38,7 @@ export const genMsgConnected = (userToken: UserToken): MsgConnected => ({
   type: "connected",
   userToken,
 })
-export const genMsgRoomCreated = (roomId: RoomId): MsgRoomCreated => ({
-  type: "roomCreated",
-  roomId,
-})
-export const genMsgIsExistTheRoomResult = (
-  isExistTheRoom: boolean,
-): MsgIsExistTheRoomResult => ({
-  type: "isExistTheRoomResult",
-  isExistTheRoom,
-})
+
 export const genMsgRoomInfo = (room: RoomForClientSide): MsgRoomInfo => ({
   type: "roomInfo",
   room,

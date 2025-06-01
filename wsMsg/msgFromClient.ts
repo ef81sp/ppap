@@ -8,28 +8,8 @@ const msgType = {
   clearAnswer: "clearAnswer",
 } as const
 
-type MsgFromClient =
-  | MsgCreateRoom
-  | MsgIsExistTheRoom
-  | MsgEnterTheRoom
-  | MsgAnswer
-  | MsgClearAnswer
+type MsgFromClient = MsgAnswer | MsgClearAnswer
 
-type MsgCreateRoom = {
-  type: (typeof msgType)["createRoom"]
-  userToken: UserToken
-  userName: string
-}
-type MsgIsExistTheRoom = {
-  type: (typeof msgType)["isExistTheRoom"]
-  roomId: RoomId
-}
-type MsgEnterTheRoom = {
-  type: (typeof msgType)["enterTheRoom"]
-  userToken: UserToken
-  userName: string
-  roomId: RoomId
-}
 type MsgAnswer = {
   type: (typeof msgType)["answer"]
   userToken: UserToken
@@ -59,28 +39,6 @@ export const isMsgFromClient = (data: unknown): data is MsgFromClient => {
 
 // =====================
 
-export const genMsgCreateRoom = (
-  userToken: UserToken,
-  userName: string,
-): MsgFromClient => ({
-  type: "createRoom",
-  userToken,
-  userName,
-})
-export const genMsgIsExistTheRoom = (roomId: RoomId): MsgIsExistTheRoom => ({
-  type: "isExistTheRoom",
-  roomId,
-})
-export const genMsgEnterTheRoom = ({
-  userToken,
-  userName,
-  roomId,
-}: Omit<MsgEnterTheRoom, "type">): MsgEnterTheRoom => ({
-  type: "enterTheRoom",
-  userToken,
-  userName,
-  roomId,
-})
 export const genMsgAnswer = ({
   userToken,
   roomId,

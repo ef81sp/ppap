@@ -3,13 +3,7 @@ import { isMsgFromServer } from "@/wsMsg/msgFromServer.ts"
 import { room, setName, setRoom, setRoomId, setToken, user } from "./store.ts"
 import router from "@/src/router/router.ts"
 import { ref, watch } from "vue"
-import {
-  genMsgAnswer,
-  genMsgClearAnswer,
-  genMsgCreateRoom,
-  genMsgEnterTheRoom,
-  genMsgIsExistTheRoom,
-} from "../../wsMsg/msgFromClient.ts"
+import { genMsgAnswer, genMsgClearAnswer } from "../../wsMsg/msgFromClient.ts"
 import { RoomId } from "../../backend/type.ts"
 
 const protocol = location.protocol === "https:" ? "wss:" : "ws:"
@@ -41,21 +35,6 @@ const msgHandler = (data: string | null) => {
       setToken(msg.userToken)
       break
     }
-    case "roomCreated": {
-      setRoomId(msg.roomId)
-
-      sessionStorage.setItem("roomId", msg.roomId)
-      sessionStorage.setItem("userName", user.name.value)
-      router.push(`/${msg.roomId}`)
-      break
-    }
-    case "isExistTheRoomResult": {
-      if (!msg.isExistTheRoom) {
-        sessionStorage.clear()
-        router.push("/")
-      }
-      break
-    }
     case "roomInfo": {
       setRoom(msg.room)
       break
@@ -67,27 +46,6 @@ const msgHandler = (data: string | null) => {
 
 // ====================
 
-export const sendCreateRoom = (name: string) => {
-  setName(name)
-  isRoomCreator.value = true
-  webSocket.send(
-    JSON.stringify(genMsgCreateRoom(user.token.value, user.name.value)),
-  )
-}
-export const sendIsExistTheRoom = (roomId: RoomId) => {
-  webSocket.send(JSON.stringify(genMsgIsExistTheRoom(roomId)))
-}
-export const sendEnterTheRoom = (roomId: RoomId, userName: string) => {
-  webSocket.send(
-    JSON.stringify(
-      genMsgEnterTheRoom({
-        roomId,
-        userToken: user.token.value,
-        userName: userName,
-      }),
-    ),
-  )
-}
 export const sendAnswer = (answer: string) => {
   webSocket.send(
     JSON.stringify(
