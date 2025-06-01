@@ -1,10 +1,8 @@
 import { useWebSocket } from "@vueuse/core"
 import { isMsgFromServer } from "@/wsMsg/msgFromServer.ts"
-import { room, setName, setRoom, setRoomId, setToken, user } from "./store.ts"
-import router from "@/src/router/router.ts"
+import { room, setRoom, setToken, user } from "./store.ts"
 import { ref, watch } from "vue"
 import { genMsgAnswer, genMsgClearAnswer } from "../../wsMsg/msgFromClient.ts"
-import { RoomId } from "../../backend/type.ts"
 
 const protocol = location.protocol === "https:" ? "wss:" : "ws:"
 const url = import.meta.env.DEV

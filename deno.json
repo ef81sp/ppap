@@ -8,7 +8,7 @@
     "install-browsers": "deno run -A e2e/install_browsers.ts",
     "deploy:build": "deno run -A --node-modules-dir npm:vite build",
     "deploy:serve": "USE_KV_STORE=true deno run --unstable-kv --unstable-cron --allow-net --allow-read --allow-env deploy-entry.ts",
-    "deploy": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net deploy.ts",
+    "deploy": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net deploy.ts"
   },
   "imports": {
     "vue": "npm:vue@^3.5.13",
