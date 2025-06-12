@@ -1,11 +1,13 @@
 import { Room, RoomId, UserToken, UserTokenInfo } from './type.ts';
 
 // KVのキー生成
-export function roomKey(roomId: RoomId): Deno.KvKey { // 戻り値を Deno.KvKey に変更
-  return ["rooms", roomId]; // 文字列の配列として返す
+export function roomKey(roomId: RoomId): Deno.KvKey {
+  // 戻り値を Deno.KvKey に変更
+  return ['rooms', roomId]; // 文字列の配列として返す
 }
-export function userTokenKey(token: UserToken): Deno.KvKey { // 戻り値を Deno.KvKey に変更
-  return ["user_tokens", token]; // 文字列の配列として返す
+export function userTokenKey(token: UserToken): Deno.KvKey {
+  // 戻り値を Deno.KvKey に変更
+  return ['user_tokens', token]; // 文字列の配列として返す
 }
 
 // Room CRUD

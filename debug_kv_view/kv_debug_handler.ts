@@ -86,8 +86,10 @@ export async function handleKvDebugRequest(
 
   // KVデバッグビューのWebSocketエンドポイント
   if (pathname === '/ws/kv-debug') {
-    if (req.headers.get("upgrade") !== "websocket") {
-      return new Response("request isn't trying to upgrade to websocket.", { status: 400 });
+    if (req.headers.get('upgrade') !== 'websocket') {
+      return new Response("request isn't trying to upgrade to websocket.", {
+        status: 400,
+      });
     }
     const { socket, response } = Deno.upgradeWebSocket(req);
     sockets.add(socket);
@@ -96,15 +98,20 @@ export async function handleKvDebugRequest(
         const currentData = await getAllKvData();
         socket.send(JSON.stringify({ type: 'initial', data: currentData }));
       } catch (e) {
-        console.error("Error sending initial KV data to debug client:", e);
-        socket.send(JSON.stringify({ type: 'error', message: 'Could not fetch initial KV data.' }));
+        console.error('Error sending initial KV data to debug client:', e);
+        socket.send(
+          JSON.stringify({
+            type: 'error',
+            message: 'Could not fetch initial KV data.',
+          })
+        );
       }
     };
     socket.onclose = () => {
       sockets.delete(socket);
     };
-    socket.onerror = (e) => {
-      console.error("KV debug WebSocket error:", e);
+    socket.onerror = e => {
+      console.error('KV debug WebSocket error:', e);
     };
     return response;
   }
@@ -112,7 +119,8 @@ export async function handleKvDebugRequest(
   // KVデバッグビューの静的ファイル (index.html, app.js など)
   if (pathname.startsWith('/debug-kv-view')) {
     // /debug-kv-view/foo.js -> /foo.js に変換して publicDir から探す
-    const relativePath = pathname.substring('/debug-kv-view'.length) || '/index.html'; // ルートならindex.html
+    const relativePath =
+      pathname.substring('/debug-kv-view'.length) || '/index.html'; // ルートならindex.html
     try {
       return await serveDir(req, {
         fsRoot: publicDir,
@@ -120,7 +128,10 @@ export async function handleKvDebugRequest(
         quiet: true,
       });
     } catch (e) {
-      console.error(`Error serving static file ${relativePath} for KV Debug:`, e);
+      console.error(
+        `Error serving static file ${relativePath} for KV Debug:`,
+        e
+      );
       // serveDir がエラーをResponseとして返す場合があるため、ここではフォールバック
       if (e instanceof Response) return e;
       return new Response('Internal Server Error serving debug static file', {
@@ -140,16 +151,22 @@ export async function handleKvDebugRequest(
           promises.push(kv!.delete(entry.key));
         }
         await Promise.all(promises);
-        return new Response(JSON.stringify({ message: 'All KV data deleted' }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({ message: 'All KV data deleted' }),
+          {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }
+        );
       } catch (e) {
         console.error('Error deleting all KV data for debug:', e);
-        return new Response(JSON.stringify({ error: 'Failed to delete KV data' }), {
-          status: 500,
-          headers: { 'content-type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({ error: 'Failed to delete KV data' }),
+          {
+            status: 500,
+            headers: { 'content-type': 'application/json' },
+          }
+        );
       }
     } else {
       return new Response('Method Not Allowed', { status: 405 });

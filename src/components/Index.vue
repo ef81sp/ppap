@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { user, setToken, setName, setRoom } from "@/composables/store"; // ストア関数をインポート
-import VButton from "./VButton.vue";
-import { CreateRoomRequest, CreateRoomResponse, Room } from "@/backend/type"; // APIの型定義をインポート
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { user, setToken, setName, setRoom } from '@/composables/store'; // ストア関数をインポート
+import VButton from './VButton.vue';
+import { CreateRoomRequest, CreateRoomResponse, Room } from '@/backend/type'; // APIの型定義をインポート
 
-const roomName = ref("");
+const roomName = ref('');
 const userName = ref(user.name.value); // ストアの初期値を設定
 const router = useRouter();
 
@@ -14,7 +14,7 @@ const errorMessage = ref<string | null>(null);
 
 const handleCreateRoom = async () => {
   if (!userName.value.trim()) {
-    errorMessage.value = "User name is required.";
+    errorMessage.value = 'User name is required.';
     return;
   }
   isLoading.value = true;
@@ -28,17 +28,21 @@ const handleCreateRoom = async () => {
       requestBody.roomName = roomName.value.trim();
     }
 
-    const response = await fetch("/api/rooms", {
-      method: "POST",
+    const response = await fetch('/api/rooms', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: "Failed to create room. Please try again." }));
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: 'Failed to create room. Please try again.' }));
+      throw new Error(
+        errorData.error || `HTTP error! status: ${response.status}`
+      );
     }
 
     const data: CreateRoomResponse = await response.json();
@@ -48,14 +52,15 @@ const handleCreateRoom = async () => {
     setToken(data.userToken);
     setRoom(data.room); // APIから返されたRoomオブジェクトをそのままストアにセット
 
-    sessionStorage.setItem("roomId", data.roomId); // 再入室用にroomIdを保存
-    sessionStorage.setItem("userToken", data.userToken); // 再入室用にuserTokenを保存
+    sessionStorage.setItem('roomId', data.roomId); // 再入室用にroomIdを保存
+    sessionStorage.setItem('userToken', data.userToken); // 再入室用にuserTokenを保存
 
     // ルームページに遷移
     router.push(`/${data.roomId}`);
   } catch (error) {
-    console.error("Error creating room:", error);
-    errorMessage.value = error instanceof Error ? error.message : "An unknown error occurred.";
+    console.error('Error creating room:', error);
+    errorMessage.value =
+      error instanceof Error ? error.message : 'An unknown error occurred.';
   } finally {
     isLoading.value = false;
   }
@@ -66,7 +71,9 @@ const handleCreateRoom = async () => {
     <h2 class="text-2xl font-bold mb-4 text-center">Create New Room</h2>
     <form @submit.prevent="handleCreateRoom" class="space-y-4">
       <div>
-        <label for="userName" class="block text-sm font-medium text-gray-700">Your Name *</label>
+        <label for="userName" class="block text-sm font-medium text-gray-700"
+          >Your Name *</label
+        >
         <input
           type="text"
           id="userName"
@@ -77,7 +84,9 @@ const handleCreateRoom = async () => {
         />
       </div>
       <div>
-        <label for="roomName" class="block text-sm font-medium text-gray-700">Room Name (Optional)</label>
+        <label for="roomName" class="block text-sm font-medium text-gray-700"
+          >Room Name (Optional)</label
+        >
         <input
           type="text"
           id="roomName"
@@ -87,9 +96,11 @@ const handleCreateRoom = async () => {
         />
       </div>
       <VButton type="submit" :disabled="isLoading" class="w-full">
-        {{ isLoading ? "Creating..." : "Create Room" }}
+        {{ isLoading ? 'Creating...' : 'Create Room' }}
       </VButton>
-      <p v-if="errorMessage" class="text-red-500 text-sm mt-2 text-center">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="text-red-500 text-sm mt-2 text-center">
+        {{ errorMessage }}
+      </p>
     </form>
   </div>
 </template>

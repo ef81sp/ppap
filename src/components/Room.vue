@@ -1,92 +1,92 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from "vue"
-import { room, setName, user } from "@/composables/store" // src/ を削除
-import { useRoute } from "vue-router"
+import { computed, ref, watch, watchEffect } from 'vue';
+import { room, setName, user } from '@/composables/store'; // src/ を削除
+import { useRoute } from 'vue-router';
 
-import InputName from "./InputName.vue"
+import InputName from './InputName.vue';
 import {
   sendAnswer,
   sendEnterTheRoom,
   sendClearAnswer,
-} from "../composables/webSocket"
-import RoomParticipant from "./RoomParticipant.vue"
-import RoomAnswerButton from "./RoomAnswerButton.vue"
-import VButton from "./VButton.vue"
+} from '../composables/webSocket';
+import RoomParticipant from './RoomParticipant.vue';
+import RoomAnswerButton from './RoomAnswerButton.vue';
+import VButton from './VButton.vue';
 
-const route = useRoute()
+const route = useRoute();
 
 const step = computed(() => {
-  if (user.name.value === "") {
-    return "name register"
+  if (user.name.value === '') {
+    return 'name register';
   }
-  return "inside room"
-})
+  return 'inside room';
+});
 
 watch(
   user.token,
-  (token) => {
-    if (token === "") return
+  token => {
+    if (token === '') return;
     // トークン取得後、セッションストレージに名前が残っていたら、その名前で入室する(再入室)
-    const roomId = route.params.roomId
-    if (typeof roomId !== "string") return
-    const userName = sessionStorage.getItem("userName")
+    const roomId = route.params.roomId;
+    if (typeof roomId !== 'string') return;
+    const userName = sessionStorage.getItem('userName');
     if (userName) {
-      enterTheRoom(userName)
+      enterTheRoom(userName);
     }
   },
   { once: true }
-)
+);
 
 // 無理やりでやばい。WebSocketのメッセージを追加して、participantにisAudienceステータスをもたせるべきだ。
-const isAudience = ref(false)
+const isAudience = ref(false);
 watchEffect(() => {
   if (
     isAudience.value &&
-    room.value.participants.find((p) => p.isMe)?.answer === ""
+    room.value.participants.find(p => p.isMe)?.answer === ''
   ) {
-    sendAnswer("-1")
+    sendAnswer('-1');
   }
-})
+});
 watch(isAudience, (newValue, oldValue) => {
-  sessionStorage.setItem("isAudience", newValue.toString())
+  sessionStorage.setItem('isAudience', newValue.toString());
   if (newValue === true && oldValue === false) {
-    sendAnswer("-1")
-    return
+    sendAnswer('-1');
+    return;
   }
   if (newValue === false && oldValue === true) {
-    sendAnswer("")
-    return
+    sendAnswer('');
+    return;
   }
-})
+});
 
 const enterTheRoom = (userName: string) => {
-  const roomId = route.params.roomId
-  if (typeof roomId !== "string") return
-  setName(userName)
-  sendEnterTheRoom(roomId, userName)
-  sessionStorage.setItem("roomId", roomId)
-  sessionStorage.setItem("userName", user.name.value)
+  const roomId = route.params.roomId;
+  if (typeof roomId !== 'string') return;
+  setName(userName);
+  sendEnterTheRoom(roomId, userName);
+  sessionStorage.setItem('roomId', roomId);
+  sessionStorage.setItem('userName', user.name.value);
 
-  const _isAudience = sessionStorage.getItem("isAudience")
-  if (_isAudience === "true") {
-    isAudience.value = true
+  const _isAudience = sessionStorage.getItem('isAudience');
+  if (_isAudience === 'true') {
+    isAudience.value = true;
   }
-}
+};
 
-const url = window.location.toString()
+const url = window.location.toString();
 const copyUrl = () => {
-  navigator.clipboard.writeText(url)
-}
+  navigator.clipboard.writeText(url);
+};
 
-const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
+const answerOptions = ['1', '2', '3', '5', '8', '13', '21'];
 const selectingAnswer = computed<string>(
-  () => room.value.participants.find((p) => p.isMe)?.answer || ""
-)
+  () => room.value.participants.find(p => p.isMe)?.answer || ''
+);
 
 const exit = () => {
-  sessionStorage.clear()
-  window.location.href = "/"
-}
+  sessionStorage.clear();
+  window.location.href = '/';
+};
 </script>
 
 <template>
