@@ -11,7 +11,11 @@ function _sendError(ws: WebSocket, _message: string) {
   );
 }
 
-export function handleWebSocket(req: Request, roomId: string, kv: Deno.Kv): Response {
+export function handleWebSocket(
+  req: Request,
+  roomId: string,
+  kv: Deno.Kv
+): Response {
   const allowedOrigins = [
     'http://localhost:5173',
     'https://your-production-domain.com',
@@ -53,7 +57,10 @@ export function handleWebSocket(req: Request, roomId: string, kv: Deno.Kv): Resp
           const room = roomRes.value;
           room.answers[userToken] = msg.payload.answer;
           room.updatedAt = Date.now();
-          await kv.atomic().set([`rooms:${roomId}`], room).commit();
+          await kv
+            .atomic()
+            .set([`rooms:${roomId}`], room)
+            .commit();
         })();
       } else if (msg.type === 'toggle_spectator') {
         (async () => {
@@ -65,7 +72,10 @@ export function handleWebSocket(req: Request, roomId: string, kv: Deno.Kv): Resp
           const info = userTokenInfoRes.value;
           info.isSpectator = msg.payload.isSpectator;
           info.lastAccessedAt = Date.now();
-          await kv.atomic().set([`user_tokens:${userToken}`], info).commit();
+          await kv
+            .atomic()
+            .set([`user_tokens:${userToken}`], info)
+            .commit();
         })();
       } else if (msg.type === 'clear_answers') {
         (async () => {
@@ -74,7 +84,10 @@ export function handleWebSocket(req: Request, roomId: string, kv: Deno.Kv): Resp
           const room = roomRes.value;
           room.answers = {};
           room.updatedAt = Date.now();
-          await kv.atomic().set([`rooms:${roomId}`], room).commit();
+          await kv
+            .atomic()
+            .set([`rooms:${roomId}`], room)
+            .commit();
         })();
       } else {
         _sendError(socket, 'Unknown message type');

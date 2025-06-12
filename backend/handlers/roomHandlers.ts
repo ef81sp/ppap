@@ -3,7 +3,10 @@ import { CreateRoomRequest, CreateRoomResponse } from '../type.ts';
 import { CreateRoomRequestSchema } from '../validate.ts';
 import { createRoom, createUserToken } from '../kv.ts';
 
-export async function handleCreateRoom(req: Request, kv: Deno.Kv): Promise<Response> {
+export async function handleCreateRoom(
+  req: Request,
+  kv: Deno.Kv
+): Promise<Response> {
   let body: CreateRoomRequest;
   try {
     body = await req.json();
@@ -57,7 +60,11 @@ export async function handleCreateRoom(req: Request, kv: Deno.Kv): Promise<Respo
   }
 }
 
-export async function handleJoinRoom(req: Request, roomId: string, kv: Deno.Kv): Promise<Response> {
+export async function handleJoinRoom(
+  req: Request,
+  roomId: string,
+  kv: Deno.Kv
+): Promise<Response> {
   let body: { userName: string; userToken?: string };
   try {
     body = await req.json();
@@ -66,7 +73,11 @@ export async function handleJoinRoom(req: Request, roomId: string, kv: Deno.Kv):
       status: 400,
     });
   }
-  if (!body.userName || typeof body.userName !== 'string' || body.userName.length > 24) {
+  if (
+    !body.userName ||
+    typeof body.userName !== 'string' ||
+    body.userName.length > 24
+  ) {
     return new Response(JSON.stringify({ error: 'Validation error' }), {
       status: 400,
     });
@@ -82,7 +93,9 @@ export async function handleJoinRoom(req: Request, roomId: string, kv: Deno.Kv):
   if (!userToken) {
     userToken = crypto.randomUUID();
   }
-  const userTokenInfoRes = await kv.get<UserTokenInfo>([`user_tokens:${userToken}`]);
+  const userTokenInfoRes = await kv.get<UserTokenInfo>([
+    `user_tokens:${userToken}`,
+  ]);
   let userTokenInfo = userTokenInfoRes.value;
   if (!userTokenInfo) {
     userTokenInfo = {
@@ -92,7 +105,10 @@ export async function handleJoinRoom(req: Request, roomId: string, kv: Deno.Kv):
       isSpectator: false,
       lastAccessedAt: Date.now(),
     };
-    await kv.atomic().set([`user_tokens:${userToken}`], userTokenInfo).commit();
+    await kv
+      .atomic()
+      .set([`user_tokens:${userToken}`], userTokenInfo)
+      .commit();
   } else {
     userTokenInfo = {
       ...userTokenInfo,
@@ -100,12 +116,18 @@ export async function handleJoinRoom(req: Request, roomId: string, kv: Deno.Kv):
       name: body.userName,
       lastAccessedAt: Date.now(),
     };
-    await kv.atomic().set([`user_tokens:${userToken}`], userTokenInfo).commit();
+    await kv
+      .atomic()
+      .set([`user_tokens:${userToken}`], userTokenInfo)
+      .commit();
   }
   if (!room.participants.includes(userToken)) {
     room.participants.push(userToken);
     room.updatedAt = Date.now();
-    await kv.atomic().set([`rooms:${roomId}`], room).commit();
+    await kv
+      .atomic()
+      .set([`rooms:${roomId}`], room)
+      .commit();
   }
   return new Response(JSON.stringify({ userToken, room }), {
     status: 200,
@@ -113,7 +135,11 @@ export async function handleJoinRoom(req: Request, roomId: string, kv: Deno.Kv):
   });
 }
 
-export async function handleLeaveRoom(req: Request, roomId: string, kv: Deno.Kv): Promise<Response> {
+export async function handleLeaveRoom(
+  req: Request,
+  roomId: string,
+  kv: Deno.Kv
+): Promise<Response> {
   let body: { userToken: string };
   try {
     body = await req.json();
@@ -134,7 +160,9 @@ export async function handleLeaveRoom(req: Request, roomId: string, kv: Deno.Kv)
       status: 404,
     });
   }
-  const userTokenInfoRes = await kv.get<UserTokenInfo>([`user_tokens:${body.userToken}`]);
+  const userTokenInfoRes = await kv.get<UserTokenInfo>([
+    `user_tokens:${body.userToken}`,
+  ]);
   const userTokenInfo = userTokenInfoRes.value;
   if (!userTokenInfo || userTokenInfo.currentRoomId !== roomId) {
     return new Response(JSON.stringify({ error: 'Invalid userToken' }), {
@@ -145,11 +173,17 @@ export async function handleLeaveRoom(req: Request, roomId: string, kv: Deno.Kv)
   if (idx !== -1) {
     room.participants.splice(idx, 1);
     room.updatedAt = Date.now();
-    await kv.atomic().set([`rooms:${roomId}`], room).commit();
+    await kv
+      .atomic()
+      .set([`rooms:${roomId}`], room)
+      .commit();
   }
   userTokenInfo.currentRoomId = null;
   userTokenInfo.lastAccessedAt = Date.now();
-  await kv.atomic().set([`user_tokens:${body.userToken}`], userTokenInfo).commit();
+  await kv
+    .atomic()
+    .set([`user_tokens:${body.userToken}`], userTokenInfo)
+    .commit();
   return new Response(
     JSON.stringify({ message: 'Successfully left the room' }),
     { status: 200, headers: { 'content-type': 'application/json' } }
