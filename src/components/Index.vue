@@ -5,7 +5,6 @@ import { user, setToken, setName, setRoom } from '@/composables/store'; // ス�
 import VButton from './VButton.vue';
 import { CreateRoomRequest, CreateRoomResponse, Room } from '@/backend/type'; // APIの型定義をインポート
 
-const roomName = ref('');
 const userName = ref(user.name.value); // ストアの初期値を設定
 const router = useRouter();
 
@@ -24,9 +23,6 @@ const handleCreateRoom = async () => {
     const requestBody: CreateRoomRequest = {
       userName: userName.value.trim(),
     };
-    if (roomName.value.trim()) {
-      requestBody.roomName = roomName.value.trim();
-    }
 
     const response = await fetch('/api/rooms', {
       method: 'POST',
@@ -80,18 +76,6 @@ const handleCreateRoom = async () => {
           v-model="userName"
           required
           placeholder="Enter your name"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-      </div>
-      <div>
-        <label for="roomName" class="block text-sm font-medium text-gray-700"
-          >Room Name (Optional)</label
-        >
-        <input
-          type="text"
-          id="roomName"
-          v-model="roomName"
-          placeholder="Enter room name (e.g., Project Alpha Meeting)"
           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>

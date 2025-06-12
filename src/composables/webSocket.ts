@@ -12,7 +12,15 @@ const url = import.meta.env.DEV
 export const webSocket = useWebSocket<string>(url, {
   heartbeat: true,
   autoReconnect: true,
+  immediate: false, // Add this line
 });
+
+// Add this function
+export const connectWebSocket = () => {
+  if (webSocket.status.value === 'CLOSED') {
+    webSocket.open();
+  }
+};
 
 watch(webSocket.data, newData => {
   msgHandler(newData);

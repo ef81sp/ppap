@@ -8,6 +8,7 @@ import {
   sendAnswer,
   sendEnterTheRoom,
   sendClearAnswer,
+  connectWebSocket, // Add this line
 } from '../composables/webSocket';
 import RoomParticipant from './RoomParticipant.vue';
 import RoomAnswerButton from './RoomAnswerButton.vue';
@@ -62,6 +63,7 @@ watch(isAudience, (newValue, oldValue) => {
 const enterTheRoom = (userName: string) => {
   const roomId = route.params.roomId;
   if (typeof roomId !== 'string') return;
+  connectWebSocket(); // Add this line
   setName(userName);
   sendEnterTheRoom(roomId, userName);
   sessionStorage.setItem('roomId', roomId);
@@ -85,7 +87,7 @@ const selectingAnswer = computed<string>(
 
 const exit = () => {
   sessionStorage.clear();
-  window.location.href = '/';
+  // window.location.href = '/';
 };
 </script>
 
