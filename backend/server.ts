@@ -7,6 +7,7 @@ import {
 } from './type.ts';
 import { CreateRoomRequestSchema } from './validate.ts';
 import { createRoom, createUserToken } from './kv.ts';
+import { handleKvDebugRequest } from '../debug_kv_view/kv_debug_handler.ts';
 
 const kv = await Deno.openKv();
 
@@ -334,8 +335,17 @@ function _sendError(ws: WebSocket, _message: string) {
   );
 }
 
-function handler(request: Request): Promise<Response> | Response {
+async function handler(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url);
+
+  // KV Debug Viewer (Development Only)
+  if (Deno.env.get('APP_ENV') === 'development') {
+    const debugResponse = await handleKvDebugRequest(request);
+    if (debugResponse) {
+      return debugResponse;
+    }
+  }
+
   if (request.method === 'POST' && pathname === '/api/rooms') {
     return handleCreateRoom(request);
   }

@@ -1,9 +1,9 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router"
 
-// @deno-types="@/src/vite-env.d.ts"
-import Index from "@/src/components/Index.vue"
-// @deno-types="@/src/vite-env.d.ts"
-import Room from "@/src/components/Room.vue"
+// @deno-types="@/vite-env.d.ts"
+import Index from "@/components/Index.vue"
+// @deno-types="@/vite-env.d.ts"
+import Room from "@/components/Room.vue"
 import { isRoomCreator, sendIsExistTheRoom } from "../composables/webSocket.ts"
 
 const routes: RouteRecordRaw[] = [

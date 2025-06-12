@@ -24,8 +24,8 @@ export type Room = {
 
 // APIリクエスト・レスポンス型
 export type CreateRoomRequest = {
-  roomName?: string;
-  userName: string;
+  roomName?: string; // 設計書通り任意
+  userName: string; // 設計書KVS設計とフローに基づき必須
 };
 export type CreateRoomResponse = {
   roomId: string;

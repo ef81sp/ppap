@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      "@/": join(dirname(fromFileUrl(import.meta.url)), "./"),
+      "@/": join(dirname(fromFileUrl(import.meta.url)), "./src/"), // ./src/ に修正
     },
   },
 })

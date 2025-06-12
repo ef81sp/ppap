@@ -1,37 +1,37 @@
 import { Room, RoomId, UserToken, UserTokenInfo } from './type.ts';
 
 // KVのキー生成
-export function roomKey(roomId: RoomId): string {
-  return `rooms:${roomId}`;
+export function roomKey(roomId: RoomId): Deno.KvKey { // 戻り値を Deno.KvKey に変更
+  return ["rooms", roomId]; // 文字列の配列として返す
 }
-export function userTokenKey(token: UserToken): string {
-  return `user_tokens:${token}`;
+export function userTokenKey(token: UserToken): Deno.KvKey { // 戻り値を Deno.KvKey に変更
+  return ["user_tokens", token]; // 文字列の配列として返す
 }
 
 // Room CRUD
 export async function createRoom(kv: Deno.Kv, room: Room): Promise<void> {
   await kv
     .atomic()
-    .set([roomKey(room.id)], room)
+    .set(roomKey(room.id), room) // 修正されたキー関数を使用
     .commit();
 }
 export async function getRoom(
   kv: Deno.Kv,
   roomId: RoomId
 ): Promise<Room | null> {
-  const res = await kv.get<Room>([roomKey(roomId)]);
+  const res = await kv.get<Room>(roomKey(roomId)); // 修正されたキー関数を使用
   return res.value ?? null;
 }
 export async function updateRoom(kv: Deno.Kv, room: Room): Promise<void> {
   await kv
     .atomic()
-    .set([roomKey(room.id)], room)
+    .set(roomKey(room.id), room) // 修正されたキー関数を使用
     .commit();
 }
 export async function deleteRoom(kv: Deno.Kv, roomId: RoomId): Promise<void> {
   await kv
     .atomic()
-    .delete([roomKey(roomId)])
+    .delete(roomKey(roomId)) // 修正されたキー関数を使用
     .commit();
 }
 
@@ -42,14 +42,14 @@ export async function createUserToken(
 ): Promise<void> {
   await kv
     .atomic()
-    .set([userTokenKey(info.token)], info)
+    .set(userTokenKey(info.token), info) // 修正されたキー関数を使用
     .commit();
 }
 export async function getUserToken(
   kv: Deno.Kv,
   token: UserToken
 ): Promise<UserTokenInfo | null> {
-  const res = await kv.get<UserTokenInfo>([userTokenKey(token)]);
+  const res = await kv.get<UserTokenInfo>(userTokenKey(token)); // 修正されたキー関数を使用
   return res.value ?? null;
 }
 export async function updateUserToken(
@@ -58,7 +58,7 @@ export async function updateUserToken(
 ): Promise<void> {
   await kv
     .atomic()
-    .set([userTokenKey(info.token)], info)
+    .set(userTokenKey(info.token), info) // 修正されたキー関数を使用
     .commit();
 }
 export async function deleteUserToken(
@@ -67,6 +67,6 @@ export async function deleteUserToken(
 ): Promise<void> {
   await kv
     .atomic()
-    .delete([userTokenKey(token)])
+    .delete(userTokenKey(token)) // 修正されたキー関数を使用
     .commit();
 }
