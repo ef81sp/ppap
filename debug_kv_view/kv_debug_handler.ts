@@ -174,14 +174,26 @@ export async function handleKvDebugRequest(
   }
 
   if (pathname === '/api/kv-debug/delete-entry') {
-    if (req.method === 'DELETE') { // POSTからDELETEに変更
+    if (req.method === 'DELETE') {
+      // POSTからDELETEに変更
       try {
         if (!kv) await initializeKv();
         const body = await req.json();
         const key = body.key; // keyは配列であることを期待
-        if (!Array.isArray(key) || key.some(k => typeof k !== 'string' && typeof k !== 'number' && !(k instanceof Uint8Array))) {
+        if (
+          !Array.isArray(key) ||
+          key.some(
+            k =>
+              typeof k !== 'string' &&
+              typeof k !== 'number' &&
+              !(k instanceof Uint8Array)
+          )
+        ) {
           return new Response(
-            JSON.stringify({ error: 'Invalid key format. Key should be an array of strings, numbers, or Uint8Array.' }),
+            JSON.stringify({
+              error:
+                'Invalid key format. Key should be an array of strings, numbers, or Uint8Array.',
+            }),
             {
               status: 400,
               headers: { 'content-type': 'application/json' },

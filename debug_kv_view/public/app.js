@@ -122,5 +122,5 @@ createApp({
         </li>
       </ul>
     </div>
-  `
+  `,
 }).mount('#app');
