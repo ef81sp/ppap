@@ -173,6 +173,53 @@ export async function handleKvDebugRequest(
     }
   }
 
+  if (pathname === '/api/kv-debug/delete-entry') {
+    if (req.method === 'DELETE') { // POSTからDELETEに変更
+      try {
+        if (!kv) await initializeKv();
+        const body = await req.json();
+        const key = body.key; // keyは配列であることを期待
+        if (!Array.isArray(key) || key.some(k => typeof k !== 'string' && typeof k !== 'number' && !(k instanceof Uint8Array))) {
+          return new Response(
+            JSON.stringify({ error: 'Invalid key format. Key should be an array of strings, numbers, or Uint8Array.' }),
+            {
+              status: 400,
+              headers: { 'content-type': 'application/json' },
+            }
+          );
+        }
+        await kv!.delete(key);
+
+        // WebSocket経由で更新を通知
+        const currentData = await getAllKvData();
+        for (const socket of sockets) {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'update', data: currentData }));
+          }
+        }
+
+        return new Response(
+          JSON.stringify({ message: 'Entry deleted successfully' }),
+          {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }
+        );
+      } catch (e) {
+        console.error('Error deleting KV entry for debug:', e);
+        return new Response(
+          JSON.stringify({ error: 'Failed to delete KV entry' }),
+          {
+            status: 500,
+            headers: { 'content-type': 'application/json' },
+          }
+        );
+      }
+    } else {
+      return new Response('Method Not Allowed', { status: 405 });
+    }
+  }
+
   return undefined; // KVデバッグビュー関連のリクエストでなければundefinedを返す
 }
 

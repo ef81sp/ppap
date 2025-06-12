@@ -68,6 +68,31 @@ createApp({
       };
     }
 
+    function deleteEntry(keyString) {
+      const key = keyString.split(' : ');
+      fetch('/api/kv-debug/delete-entry', {
+        method: 'DELETE', // POSTからDELETEに変更
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key }),
+      })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(err => {
+              throw new Error(err.error || 'Failed to delete entry');
+            });
+          }
+          // 成功時はWebSocket経由で更新されるので、ここでは何もしない
+          // 必要であれば、ローカルのkvDataを即時更新することも可能
+          console.log('Delete request sent for key:', key);
+        })
+        .catch(err => {
+          console.error('Error deleting entry:', err);
+          error.value = err.message;
+        });
+    }
+
     connectWebSocket();
 
     return {
@@ -75,6 +100,27 @@ createApp({
       error,
       wsStatus,
       wsStatusColor,
+      deleteEntry, // deleteEntryを返す
     };
   },
+  template: `
+    <div class="container">
+      <h1>Deno KV Debug Viewer</h1>
+      <p>WebSocket Status: <span :style="{ color: wsStatusColor }">{{ wsStatus }}</span></p>
+      <div v-if="error" class="error-message">
+        <p>Error: {{ error }}</p>
+      </div>
+      <div v-if="kvData.length === 0 && !error">
+        <p>No data in KV store or not yet loaded.</p>
+      </div>
+      <ul v-else class="kv-list">
+        <li v-for="item in kvData" :key="item.key" class="kv-item">
+          <div class="kv-key"><strong>Key:</strong> {{ item.key }}</div>
+          <pre class="kv-value">{{ item.value }}</pre>
+          <div class="kv-versionstamp">Versionstamp: {{ item.versionstamp }}</div>
+          <button @click="deleteEntry(item.key)" class="delete-button">Delete</button>
+        </li>
+      </ul>
+    </div>
+  `
 }).mount('#app');
