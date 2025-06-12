@@ -1,28 +1,50 @@
-export type UserToken = string
-export type User = {
-  token: UserToken
-  name: string
-  answer: string
-}
-export type UsersSockets = Map<UserToken, WebSocket>
+export type UserToken = string;
 
-export type RoomId = string
+export type UserTokenInfo = {
+  token: UserToken;
+  currentRoomId: string | null;
+  name: string;
+  isSpectator: boolean;
+  lastAccessedAt: number; // UNIXタイムスタンプ(ms)
+};
+
+export type RoomId = string;
 export type Room = {
-  id: string
-  participants: User[]
-  isOpen: boolean
-  // 最終更新日時
-  updatedAt: Date
-}
+  id: RoomId;
+  name: string;
+  participants: UserToken[]; // UserTokenの配列のみ保持
+  answers: Record<UserToken, string>; // 回答内容
+  config: {
+    allowSpectators: boolean;
+    maxParticipants: number;
+  };
+  createdAt: number; // UNIXタイムスタンプ(ms)
+  updatedAt: number; // UNIXタイムスタンプ(ms)
+};
 
-export type UserForClientSide = {
-  name: string
-  answer: string
-  userNumber: number
-  isMe: boolean
-}
-export type RoomForClientSide = {
-  id: string
-  participants: UserForClientSide[]
-  isOpen: boolean
-}
+// APIリクエスト・レスポンス型
+export type CreateRoomRequest = {
+  roomName?: string;
+  userName: string;
+};
+export type CreateRoomResponse = {
+  roomId: string;
+  userToken: string;
+  room: Room;
+};
+
+export type JoinRoomRequest = {
+  userName: string;
+  userToken?: string;
+};
+export type JoinRoomResponse = {
+  userToken: string;
+  room: Room;
+};
+
+export type LeaveRoomRequest = {
+  userToken: string;
+};
+export type LeaveRoomResponse = {
+  message: string;
+};
