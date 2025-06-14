@@ -2,6 +2,7 @@ import {
   handleCreateRoom,
   handleJoinRoom,
   handleLeaveRoom,
+  handleRejoinRoom,
 } from './roomHandlers.ts';
 import {
   assertEquals,
@@ -13,6 +14,7 @@ import {
   CreateRoomResponse,
   JoinRoomResponse,
   LeaveRoomResponse,
+  RejoinRoomResponse,
 } from '../type.ts';
 import { getRoom, getUserToken } from '../kv.ts';
 import { clearKvAll } from '../clear_kv.ts';
@@ -172,5 +174,75 @@ Deno.test({
       await clearKvAll(kv);
       kv.close();
     });
+  },
+});
+
+Deno.test({
+  name: 'handleRejoinRoom',
+  fn: async t => {
+    let kv: Deno.Kv | undefined;
+    let roomId: string = '';
+    let userToken: string = '';
+    let rejoinRes: Response | undefined;
+    let rejoinJson: RejoinRoomResponse | { error: string };
+    await t.step('setup', async () => {
+      kv = await Deno.openKv('./test');
+      await clearKvAll(kv);
+      // ルーム作成
+      const reqBody = { userName: '再入場ユーザー' };
+      const createReq = new Request('http://localhost/rooms', {
+        method: 'POST',
+        body: JSON.stringify(reqBody),
+        headers: { 'content-type': 'application/json' },
+      });
+      const createRes = await handleCreateRoom(createReq, kv);
+      const createJson = await createRes.json();
+      roomId = createJson.roomId;
+      userToken = createJson.userToken;
+    });
+    await t.step('未参加者がrejoinした場合404', async () => {
+      if (!kv) throw new Error('kv not initialized');
+      // 新規ユーザー（未参加）
+      const newUserToken = crypto.randomUUID();
+      const rejoinReq = new Request(
+        'http://localhost/rooms/' + roomId + '/rejoin',
+        {
+          method: 'POST',
+          body: JSON.stringify({ userToken: newUserToken }),
+          headers: { 'content-type': 'application/json' },
+        }
+      );
+      const res = await handleRejoinRoom(rejoinReq, roomId, kv);
+      assertEquals(res.status, 404);
+      const json = await res.json();
+      assert('error' in json);
+    });
+    await t.step('参加済みユーザーがrejoinした場合200', async () => {
+      if (!kv) throw new Error('kv not initialized');
+      const rejoinReq = new Request(
+        'http://localhost/rooms/' + roomId + '/rejoin',
+        {
+          method: 'POST',
+          body: JSON.stringify({ userToken }),
+          headers: { 'content-type': 'application/json' },
+        }
+      );
+      rejoinRes = await handleRejoinRoom(rejoinReq, roomId, kv);
+      rejoinJson = await rejoinRes.json();
+      assertEquals(rejoinRes.status, 200);
+      assertEquals(
+        'userToken' in rejoinJson ? rejoinJson.userToken : undefined,
+        userToken
+      );
+      assertEquals(
+        'userNumber' in rejoinJson ? typeof rejoinJson.userNumber : undefined,
+        'number'
+      );
+      assertExists('room' in rejoinJson ? rejoinJson.room : undefined);
+    });
+    if (kv) {
+      await clearKvAll(kv);
+      kv.close();
+    }
   },
 });

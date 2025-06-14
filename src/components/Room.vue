@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from 'vue';
-import { room, setName, user, setRoom } from '../composables/store'; // src/ を削除
+import { room, setName, user, setRoom, setToken } from '../composables/store'; // src/ を削除
 import { useRoute, useRouter } from 'vue-router';
 
 import InputName from './InputName.vue';
@@ -13,7 +13,7 @@ import {
 import RoomParticipant from './RoomParticipant.vue';
 import RoomAnswerButton from './RoomAnswerButton.vue';
 import VButton from './VButton.vue';
-import { joinRoomApi } from '../fetchApi';
+import { joinRoomApi, rejoinRoomApi } from '../fetchApi';
 
 const route = useRoute();
 const router = useRouter();
@@ -24,21 +24,6 @@ const step = computed(() => {
   }
   return 'inside room';
 });
-
-watch(
-  user.token,
-  token => {
-    if (token === '') return;
-    // トークン取得後、セッションストレージに名前が残っていたら、その名前で入室する(再入室)
-    const roomId = route.params.roomId;
-    if (typeof roomId !== 'string') return;
-    const userName = sessionStorage.getItem('userName');
-    if (userName) {
-      enterTheRoom(userName);
-    }
-  },
-  { once: true }
-);
 
 // 無理やりでやばい。WebSocketのメッセージを追加して、participantにisAudienceステータスをもたせるべきだ。
 const isAudience = ref(false);
@@ -82,6 +67,31 @@ const enterTheRoom = async (userName: string) => {
     isAudience.value = true;
   }
 };
+
+const tryRejoinRoom = async () => {
+  const roomId = route.params.roomId;
+  const userToken = sessionStorage.getItem('userToken');
+  if (typeof roomId !== 'string' || !userToken) return false;
+  try {
+    const res = await rejoinRoomApi(roomId, { userToken });
+    setRoom(res.room);
+    setName(res.userName);
+    setToken(res.userToken);
+
+    sessionStorage.setItem('roomId', roomId);
+    sessionStorage.setItem('userToken', res.userToken);
+    sessionStorage.setItem('userName', res.userName);
+    return true;
+  } catch (e) {
+    // 404など
+    sessionStorage.clear();
+    router.push('/');
+    return false;
+  }
+};
+
+// ページロード時にrejoinを試みる
+tryRejoinRoom();
 
 const url = window.location.toString();
 const copyUrl = () => {

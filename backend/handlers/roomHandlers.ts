@@ -213,3 +213,68 @@ export async function handleLeaveRoom(
     { status: 200, headers: { 'content-type': 'application/json' } }
   );
 }
+
+export async function handleRejoinRoom(
+  req: Request,
+  roomId: string,
+  kv: Deno.Kv
+): Promise<Response> {
+  let body: { userToken: string };
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+      status: 400,
+    });
+  }
+  const userToken = body.userToken;
+  if (!userToken || typeof userToken !== 'string') {
+    return new Response(JSON.stringify({ error: 'Validation error' }), {
+      status: 400,
+    });
+  }
+  // ユーザートークンの存在確認
+  const userTokenInfoRes = await kv.get<UserTokenInfo>(userTokenKey(userToken));
+  const userTokenInfo = userTokenInfoRes.value;
+  if (!userTokenInfo) {
+    return new Response(
+      JSON.stringify({ error: 'User not found or invalid token' }),
+      {
+        status: 404,
+      }
+    );
+  }
+  // ルーム情報取得
+  const roomRes = await kv.get<Room>(roomKey(roomId));
+  const room = roomRes.value;
+  if (!room) {
+    return new Response(JSON.stringify({ error: 'Room not found' }), {
+      status: 404,
+    });
+  }
+  // 参加者に自分がいるか確認
+  const participant = room.participants.find(p => p.token === userToken);
+  if (!participant) {
+    // 未参加者は404
+    return new Response(
+      JSON.stringify({ error: 'User not joined in this room' }),
+      {
+        status: 404,
+      }
+    );
+  }
+  // userNumberを計算
+  const userNumber = room.participants.findIndex(p => p.token === userToken);
+  return new Response(
+    JSON.stringify({
+      userToken,
+      userNumber,
+      room: toRoomForClient(room, userToken),
+      userName: participant.name,
+    }),
+    {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }
+  );
+}

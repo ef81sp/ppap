@@ -69,3 +69,13 @@ export type LeaveRoomRequest = {
 export type LeaveRoomResponse = {
   message: string;
 };
+
+export type RejoinRoomRequest = {
+  userToken: string;
+};
+export type RejoinRoomResponse = {
+  userToken: string;
+  userNumber: number;
+  room: RoomForClient;
+  userName: string;
+};

@@ -4,6 +4,7 @@ import {
   handleCreateRoom,
   handleJoinRoom,
   handleLeaveRoom,
+  handleRejoinRoom, // 追加
 } from './handlers/roomHandlers.ts';
 import {
   handleWebSocket,
@@ -40,6 +41,13 @@ async function handler(request: Request): Promise<Response> {
   ) {
     const roomId = pathname.match(/^\/api\/rooms\/(.+)\/leave$/)?.[1] ?? '';
     return handleLeaveRoom(request, roomId, kv);
+  }
+  if (
+    request.method === 'POST' &&
+    pathname.match(/^\/api\/rooms\/(.+)\/rejoin$/)
+  ) {
+    const roomId = pathname.match(/^\/api\/rooms\/(.+)\/rejoin$/)?.[1] ?? '';
+    return handleRejoinRoom(request, roomId, kv);
   }
   if (request.method === 'GET' && pathname.match(/^\/ws\/rooms\/(.+)$/)) {
     const roomId = pathname.match(/^\/ws\/rooms\/(.+)$/)?.[1] ?? '';
