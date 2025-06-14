@@ -11,7 +11,6 @@ export type UserTokenInfo = {
 export type RoomId = string;
 export type Room = {
   id: RoomId;
-  name: string;
   participants: UserToken[]; // UserTokenの配列のみ保持
   answers: Record<UserToken, string>; // 回答内容
   config: {
@@ -24,7 +23,6 @@ export type Room = {
 
 // APIリクエスト・レスポンス型
 export type CreateRoomRequest = {
-  roomName?: string; // 設計書通り任意
   userName: string; // 設計書KVS設計とフローに基づき必須
 };
 export type CreateRoomResponse = {

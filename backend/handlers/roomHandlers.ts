@@ -27,13 +27,12 @@ export async function handleCreateRoom(
       status: 400,
     });
   }
-  const { roomName, userName } = parse.data;
+  const { userName } = parse.data;
   const roomId = crypto.randomUUID();
   const userToken = crypto.randomUUID();
   const now = Date.now();
   const room: Room = {
     id: roomId,
-    name: roomName ?? 'ルーム',
     participants: [userToken],
     answers: {},
     config: { allowSpectators: true, maxParticipants: 50 },
