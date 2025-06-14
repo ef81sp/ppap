@@ -119,9 +119,7 @@ export async function handleJoinRoom(
   if (!userToken) {
     userToken = crypto.randomUUID();
   }
-  const userTokenInfoRes = await kv.get<UserTokenInfo>([
-    `user_tokens:${userToken}`,
-  ]);
+  const userTokenInfoRes = await kv.get<UserTokenInfo>(userTokenKey(userToken));
   let userTokenInfo = userTokenInfoRes.value;
   if (!userTokenInfo) {
     userTokenInfo = {
@@ -131,10 +129,7 @@ export async function handleJoinRoom(
       isSpectator: false,
       lastAccessedAt: Date.now(),
     };
-    await kv
-      .atomic()
-      .set([`user_tokens:${userToken}`], userTokenInfo)
-      .commit();
+    await kv.atomic().set(userTokenKey(userToken), userTokenInfo).commit();
   } else {
     userTokenInfo = {
       ...userTokenInfo,
@@ -142,10 +137,7 @@ export async function handleJoinRoom(
       name: body.userName,
       lastAccessedAt: Date.now(),
     };
-    await kv
-      .atomic()
-      .set([`user_tokens:${userToken}`], userTokenInfo)
-      .commit();
+    await kv.atomic().set(userTokenKey(userToken), userTokenInfo).commit();
   }
   if (!room.participants.some(p => p.token === userToken)) {
     room.participants.push({

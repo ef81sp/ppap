@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from 'vue';
-import { room, setName, user } from '../composables/store'; // src/ を削除
+import { room, setName, user, setRoom } from '../composables/store'; // src/ を削除
 import { useRoute, useRouter } from 'vue-router';
 
 import InputName from './InputName.vue';
@@ -13,6 +13,7 @@ import {
 import RoomParticipant from './RoomParticipant.vue';
 import RoomAnswerButton from './RoomAnswerButton.vue';
 import VButton from './VButton.vue';
+import { joinRoomApi } from '../fetchApi';
 
 const route = useRoute();
 const router = useRouter();
@@ -61,15 +62,21 @@ watch(isAudience, (newValue, oldValue) => {
   }
 });
 
-const enterTheRoom = (userName: string) => {
+const enterTheRoom = async (userName: string) => {
   const roomId = route.params.roomId;
   if (typeof roomId !== 'string') return;
-  connectWebSocket(); // Add this line
   setName(userName);
-  sendEnterTheRoom(roomId, userName);
-  sessionStorage.setItem('roomId', roomId);
-  sessionStorage.setItem('userName', user.name.value);
-
+  try {
+    const res = await joinRoomApi(roomId, { userName });
+    setRoom(res.room);
+    user.token.value = res.userToken;
+    sessionStorage.setItem('roomId', roomId);
+    sessionStorage.setItem('userName', userName);
+    sessionStorage.setItem('userToken', res.userToken);
+  } catch (e) {
+    alert('ルーム参加に失敗しました');
+    return;
+  }
   const _isAudience = sessionStorage.getItem('isAudience');
   if (_isAudience === 'true') {
     isAudience.value = true;

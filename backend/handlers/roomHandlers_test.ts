@@ -8,8 +8,14 @@ import {
   assert,
   assertExists,
 } from 'https://deno.land/std@0.203.0/assert/mod.ts';
-import { CreateRoomRequest, CreateRoomResponse } from '../type.ts';
+import {
+  CreateRoomRequest,
+  CreateRoomResponse,
+  JoinRoomResponse,
+  LeaveRoomResponse,
+} from '../type.ts';
 import { getRoom, getUserToken } from '../kv.ts';
+import { clearKvAll } from '../clear_kv.ts';
 
 Deno.test({
   name: 'handleCreateRoom',
@@ -18,7 +24,8 @@ Deno.test({
     let res: Response;
     let json: CreateRoomResponse;
     await t.step('setup', async () => {
-      kv = await Deno.openKv();
+      kv = await Deno.openKv('./test');
+      await clearKvAll(kv);
       const reqBody: CreateRoomRequest = {
         userName: 'テストユーザー',
       };
@@ -54,6 +61,7 @@ Deno.test({
       assertExists(userToken);
       assertEquals(userToken?.name, 'テストユーザー');
       assertEquals(userToken?.currentRoomId, json.roomId);
+      await clearKvAll(kv);
       kv.close();
     });
   },
@@ -65,10 +73,11 @@ Deno.test({
     let kv: Deno.Kv;
     let roomId: string;
     let joinRes: Response;
-    let joinJson: any;
+    let joinJson: JoinRoomResponse;
     let userToken: string;
     await t.step('setup', async () => {
-      kv = await Deno.openKv();
+      kv = await Deno.openKv('./test');
+      await clearKvAll(kv);
       // ルーム作成
       const reqBody: CreateRoomRequest = { userName: '参加者1' };
       const createReq = new Request('http://localhost/rooms', {
@@ -114,6 +123,7 @@ Deno.test({
       assertExists(user);
       assertEquals(user?.name, '参加者2');
       assertEquals(user?.currentRoomId, roomId);
+      await clearKvAll(kv);
       kv.close();
     });
   },
@@ -126,9 +136,10 @@ Deno.test({
     let roomId: string;
     let userToken: string;
     let leaveRes: Response;
-    let leaveJson: any;
+    let leaveJson: LeaveRoomResponse;
     await t.step('setup', async () => {
-      kv = await Deno.openKv();
+      kv = await Deno.openKv('./test');
+      await clearKvAll(kv);
       // ルーム作成
       const reqBody: CreateRoomRequest = { userName: '離脱ユーザー' };
       const createReq = new Request('http://localhost/rooms', {
@@ -158,6 +169,7 @@ Deno.test({
       assertEquals(room, null);
       const user = await getUserToken(kv, userToken);
       assertEquals(user, null);
+      await clearKvAll(kv);
       kv.close();
     });
   },

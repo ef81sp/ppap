@@ -19,9 +19,7 @@ Deno.test('Room CRUD: 正常系', async () => {
   try {
     const room: Room = {
       id: 'room1',
-      name: 'ルーム1',
       participants: [],
-      answers: {},
       config: { allowSpectators: true, maxParticipants: 50 },
       createdAt: Date.now(),
       updatedAt: Date.now(),
