@@ -11,14 +11,35 @@ export type UserTokenInfo = {
 export type RoomId = string;
 export type Room = {
   id: RoomId;
-  participants: UserToken[]; // UserTokenの配列のみ保持
-  answers: Record<UserToken, string>; // 回答内容
+  participants: Array<{
+    token: UserToken;
+    name: string;
+    answer: string;
+  }>;
   config: {
     allowSpectators: boolean;
     maxParticipants: number;
   };
   createdAt: number; // UNIXタイムスタンプ(ms)
   updatedAt: number; // UNIXタイムスタンプ(ms)
+};
+
+// クライアント用のルーム情報型（UserTokenを含まない）
+export type RoomForClient = {
+  id: RoomId;
+  participants: Array<{
+    name: string;
+    userNumber: number;
+    isMe: boolean;
+    answer: string;
+    // 必要に応じて他の公開情報を追加
+  }>;
+  config: {
+    allowSpectators: boolean;
+    maxParticipants: number;
+  };
+  createdAt: number;
+  updatedAt: number;
 };
 
 // APIリクエスト・レスポンス型
@@ -28,7 +49,8 @@ export type CreateRoomRequest = {
 export type CreateRoomResponse = {
   roomId: string;
   userToken: string;
-  room: Room;
+  userNumber: number; // 追加: 自分のuserNumber
+  room: RoomForClient;
 };
 
 export type JoinRoomRequest = {
@@ -37,7 +59,8 @@ export type JoinRoomRequest = {
 };
 export type JoinRoomResponse = {
   userToken: string;
-  room: Room;
+  userNumber: number; // 追加: 自分のuserNumber
+  room: RoomForClient;
 };
 
 export type LeaveRoomRequest = {

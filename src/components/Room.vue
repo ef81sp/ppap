@@ -82,9 +82,11 @@ const copyUrl = () => {
 };
 
 const answerOptions = ['1', '2', '3', '5', '8', '13', '21'];
-const selectingAnswer = computed<string>(
-  () => room.value.participants.find(p => p.isMe)?.answer || ''
-);
+const selectingAnswer = computed<string>(() => {
+  if (!room.value) return '';
+  const me = room.value.participants.find(p => p.isMe);
+  return me ? me.answer : '';
+});
 
 const exit = async () => {
   const roomId = route.params.roomId;
@@ -122,10 +124,10 @@ const exit = async () => {
     </section>
     <section class="flex justify-center flex-wrap items-center mt-8 gap-y-4">
       <RoomParticipant
-        v-for="p in room.participants"
+        v-for="p in room && room.participants"
         :key="p.userNumber"
         :participant="p"
-        :is-open="room.isOpen"
+        :is-open="room && room.isOpen"
       />
     </section>
     <section class="mt-8">

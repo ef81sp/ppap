@@ -3,6 +3,7 @@ import { isMsgFromServer } from '../../wsMsg/msgFromServer.ts';
 import { room, setRoom, setToken, user } from './store.ts';
 import { ref, watch } from 'vue';
 import { genMsgAnswer, genMsgClearAnswer } from '../../wsMsg/msgFromClient.ts';
+import { RoomForClient } from '@/backend/type.ts';
 
 const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
 const url = import.meta.env.DEV
@@ -47,7 +48,7 @@ const msgHandler = (data: string | null) => {
       break;
     }
     case 'roomInfo': {
-      setRoom(msg.room);
+      setRoom(msg.room as RoomForClient);
       break;
     }
     default:

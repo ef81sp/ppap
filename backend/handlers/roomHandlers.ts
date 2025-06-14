@@ -1,5 +1,9 @@
 import { Room, UserTokenInfo } from '../type.ts';
-import { CreateRoomRequest, CreateRoomResponse } from '../type.ts';
+import {
+  CreateRoomRequest,
+  CreateRoomResponse,
+  RoomForClient,
+} from '../type.ts';
 import { CreateRoomRequestSchema } from '../validate.ts';
 import {
   createRoom,
@@ -8,6 +12,22 @@ import {
   userTokenKey,
   leaveRoom,
 } from '../kv.ts';
+
+// Room型からRoomForClient型へ変換する関数
+function toRoomForClient(room: Room, userToken: string): RoomForClient {
+  return {
+    id: room.id,
+    participants: room.participants.map((p, i) => ({
+      name: p.name,
+      userNumber: i,
+      isMe: p.token === userToken,
+      answer: p.answer,
+    })),
+    config: room.config,
+    createdAt: room.createdAt,
+    updatedAt: room.updatedAt,
+  };
+}
 
 export async function handleCreateRoom(
   req: Request,
@@ -33,8 +53,7 @@ export async function handleCreateRoom(
   const now = Date.now();
   const room: Room = {
     id: roomId,
-    participants: [userToken],
-    answers: {},
+    participants: [{ token: userToken, name: userName, answer: '' }],
     config: { allowSpectators: true, maxParticipants: 50 },
     createdAt: now,
     updatedAt: now,
@@ -49,10 +68,12 @@ export async function handleCreateRoom(
   try {
     await createRoom(kv, room);
     await createUserToken(kv, userTokenInfo);
-    const res: CreateRoomResponse = {
+    const userNumber = 0; // ルーム作成者は常に0番
+    const res = {
       roomId,
       userToken,
-      room,
+      userNumber,
+      room: toRoomForClient(room, userToken),
     };
     return new Response(JSON.stringify(res), {
       status: 201,
@@ -126,15 +147,28 @@ export async function handleJoinRoom(
       .set([`user_tokens:${userToken}`], userTokenInfo)
       .commit();
   }
-  if (!room.participants.includes(userToken)) {
-    room.participants.push(userToken);
+  if (!room.participants.some(p => p.token === userToken)) {
+    room.participants.push({
+      token: userToken,
+      name: body.userName,
+      answer: '',
+    });
     room.updatedAt = Date.now();
     await kv.atomic().set(roomKey(roomId), room).commit();
   }
-  return new Response(JSON.stringify({ userToken, room }), {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-  });
+  // userNumberを計算
+  const userNumber = room.participants.findIndex(p => p.token === userToken);
+  return new Response(
+    JSON.stringify({
+      userToken,
+      userNumber,
+      room: toRoomForClient(room, userToken),
+    }),
+    {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }
+  );
 }
 
 export async function handleLeaveRoom(
@@ -163,12 +197,11 @@ export async function handleLeaveRoom(
     });
   }
   // 参加者削除
-  const idx = room.participants.indexOf(body.userToken);
+  const idx = room.participants.findIndex(p => p.token === body.userToken);
   if (idx !== -1) {
     room.participants.splice(idx, 1);
-    if (room.answers && body.userToken in room.answers) {
-      delete room.answers[body.userToken];
-    }
+    // 旧: if (room.answers && body.userToken in room.answers) { delete room.answers[body.userToken]; }
+    // 新: 何もしない（answerはparticipants内にあるため、削除でOK）
     room.updatedAt = Date.now();
     const result = await leaveRoom(kv, room, roomId, body.userToken);
     if (!result.ok) {

@@ -8,7 +8,7 @@ import {
   assert,
   assertExists,
 } from 'https://deno.land/std@0.203.0/assert/mod.ts';
-import { CreateRoomRequest } from '../type.ts';
+import { CreateRoomRequest, CreateRoomResponse } from '../type.ts';
 import { getRoom, getUserToken } from '../kv.ts';
 
 Deno.test({
@@ -16,7 +16,7 @@ Deno.test({
   fn: async t => {
     let kv: Deno.Kv;
     let res: Response;
-    let json: any;
+    let json: CreateRoomResponse;
     await t.step('setup', async () => {
       kv = await Deno.openKv();
       const reqBody: CreateRoomRequest = {
@@ -35,11 +35,21 @@ Deno.test({
       assertExists(json.roomId);
       assertExists(json.userToken);
       assertExists(json.room);
+      assertEquals(json.userNumber, 0);
+      assert(json.room.participants.every(p => !('token' in p)));
+      assertEquals(json.room.participants[0].userNumber, 0);
+      assertEquals(json.room.participants[0].isMe, true);
+      assertEquals(json.room.participants[0].name, 'テストユーザー');
+      // answer初期値
+      assertEquals(json.room.participants[0].answer, '');
     });
     await t.step('KV: 登録内容の妥当性', async () => {
       const room = await getRoom(kv, json.roomId);
       assertExists(room);
       assertEquals(room?.participants.length, 1);
+      assertEquals(room?.participants[0].token, json.userToken);
+      assertEquals(room?.participants[0].name, 'テストユーザー');
+      assertEquals(room?.participants[0].answer, '');
       const userToken = await getUserToken(kv, json.userToken);
       assertExists(userToken);
       assertEquals(userToken?.name, 'テストユーザー');
@@ -84,13 +94,21 @@ Deno.test({
       assertExists(joinJson.userToken);
       assertExists(joinJson.room);
       assertEquals(joinJson.room.id, roomId);
-      assert(joinJson.room.participants.includes(joinJson.userToken));
       assertEquals(joinJson.room.participants.length, 2);
+      assertEquals(joinJson.userNumber, 1);
+      assert(joinJson.room.participants.every(p => !('token' in p)));
+      assertEquals(joinJson.room.participants[1].userNumber, 1);
+      assertEquals(joinJson.room.participants[1].isMe, true);
+      assertEquals(joinJson.room.participants[1].name, '参加者2');
+      assertEquals(joinJson.room.participants[1].answer, '');
     });
     await t.step('KV: 参加後の内容', async () => {
       const room = await getRoom(kv, roomId);
       assertExists(room);
-      assert(room?.participants.includes(userToken));
+      const p = room?.participants.find(p => p.token === userToken);
+      assertExists(p);
+      assertEquals(p?.name, '参加者2');
+      assertEquals(p?.answer, '');
       assertEquals(room?.participants.length, 2);
       const user = await getUserToken(kv, userToken);
       assertExists(user);
