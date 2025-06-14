@@ -1,7 +1,13 @@
 import { Room, UserTokenInfo } from '../type.ts';
 import { CreateRoomRequest, CreateRoomResponse } from '../type.ts';
 import { CreateRoomRequestSchema } from '../validate.ts';
-import { createRoom, createUserToken } from '../kv.ts';
+import {
+  createRoom,
+  createUserToken,
+  roomKey,
+  userTokenKey,
+  leaveRoom,
+} from '../kv.ts';
 
 export async function handleCreateRoom(
   req: Request,
@@ -82,7 +88,7 @@ export async function handleJoinRoom(
       status: 400,
     });
   }
-  const roomRes = await kv.get<Room>([`rooms:${roomId}`]);
+  const roomRes = await kv.get<Room>(roomKey(roomId));
   const room = roomRes.value;
   if (!room) {
     return new Response(JSON.stringify({ error: 'Room not found' }), {
@@ -124,10 +130,7 @@ export async function handleJoinRoom(
   if (!room.participants.includes(userToken)) {
     room.participants.push(userToken);
     room.updatedAt = Date.now();
-    await kv
-      .atomic()
-      .set([`rooms:${roomId}`], room)
-      .commit();
+    await kv.atomic().set(roomKey(roomId), room).commit();
   }
   return new Response(JSON.stringify({ userToken, room }), {
     status: 200,
@@ -153,37 +156,34 @@ export async function handleLeaveRoom(
       status: 400,
     });
   }
-  const roomRes = await kv.get<Room>([`rooms:${roomId}`]);
+  const roomRes = await kv.get<Room>(roomKey(roomId));
   const room = roomRes.value;
   if (!room) {
     return new Response(JSON.stringify({ error: 'Room not found' }), {
       status: 404,
     });
   }
-  const userTokenInfoRes = await kv.get<UserTokenInfo>([
-    `user_tokens:${body.userToken}`,
-  ]);
-  const userTokenInfo = userTokenInfoRes.value;
-  if (!userTokenInfo || userTokenInfo.currentRoomId !== roomId) {
-    return new Response(JSON.stringify({ error: 'Invalid userToken' }), {
-      status: 400,
-    });
-  }
+  // 参加者削除
   const idx = room.participants.indexOf(body.userToken);
   if (idx !== -1) {
     room.participants.splice(idx, 1);
+    if (room.answers && body.userToken in room.answers) {
+      delete room.answers[body.userToken];
+    }
     room.updatedAt = Date.now();
-    await kv
-      .atomic()
-      .set([`rooms:${roomId}`], room)
-      .commit();
+    const result = await leaveRoom(kv, room, roomId, body.userToken);
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: 500,
+      });
+    }
+  } else {
+    // 参加していない場合もuser_tokensとuser_rooms削除だけは行う
+    const atomic = kv.atomic();
+    atomic.delete(userTokenKey(body.userToken));
+    atomic.delete([`user_rooms:${body.userToken}`]);
+    await atomic.commit();
   }
-  userTokenInfo.currentRoomId = null;
-  userTokenInfo.lastAccessedAt = Date.now();
-  await kv
-    .atomic()
-    .set([`user_tokens:${body.userToken}`], userTokenInfo)
-    .commit();
   return new Response(
     JSON.stringify({ message: 'Successfully left the room' }),
     { status: 200, headers: { 'content-type': 'application/json' } }

@@ -72,3 +72,25 @@ export async function deleteUserToken(
     .delete(userTokenKey(token)) // 修正されたキー関数を使用
     .commit();
 }
+
+export async function leaveRoom(
+  kv: Deno.Kv,
+  room: Room,
+  roomId: RoomId,
+  userToken: UserToken
+): Promise<{ ok: boolean; error?: string }> {
+  const atomic = kv.atomic();
+  if (room.participants.length === 0) {
+    // 参加者が0人ならroom自体も削除
+    atomic.delete(roomKey(roomId));
+  } else {
+    atomic.set(roomKey(roomId), room);
+  }
+  atomic.delete(userTokenKey(userToken));
+  atomic.delete([`user_rooms:${userToken}`]);
+  const result = await atomic.commit();
+  if (!result.ok) {
+    return { ok: false, error: 'Failed to update room or delete user token' };
+  }
+  return { ok: true };
+}

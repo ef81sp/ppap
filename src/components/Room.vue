@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from 'vue';
 import { room, setName, user } from '@/composables/store'; // src/ を削除
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 import InputName from './InputName.vue';
 import {
@@ -15,6 +15,7 @@ import RoomAnswerButton from './RoomAnswerButton.vue';
 import VButton from './VButton.vue';
 
 const route = useRoute();
+const router = useRouter();
 
 const step = computed(() => {
   if (user.name.value === '') {
@@ -85,9 +86,26 @@ const selectingAnswer = computed<string>(
   () => room.value.participants.find(p => p.isMe)?.answer || ''
 );
 
-const exit = () => {
+const exit = async () => {
+  const roomId = route.params.roomId;
+  const userToken = sessionStorage.getItem('userToken');
+  if (typeof roomId === 'string' && userToken) {
+    try {
+      const res = await fetch(`/api/rooms/${roomId}/leave`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userToken }),
+      });
+      if (!res.ok) {
+        // エラー時はそのままクリアして遷移
+        console.error('退室APIエラー', await res.text());
+      }
+    } catch (e) {
+      console.error('退室API通信エラー', e);
+    }
+  }
   sessionStorage.clear();
-  // window.location.href = '/';
+  router.push('/');
 };
 </script>
 
