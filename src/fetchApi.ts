@@ -1,4 +1,9 @@
-import type { JoinRoomRequest, JoinRoomResponse, RejoinRoomRequest, RejoinRoomResponse } from '@/backend/type.ts';
+import type {
+  JoinRoomRequest,
+  JoinRoomResponse,
+  RejoinRoomRequest,
+  RejoinRoomResponse,
+} from '@/backend/type.ts';
 
 export async function joinRoomApi(
   roomId: string,
