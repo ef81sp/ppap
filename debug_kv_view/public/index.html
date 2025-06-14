@@ -64,6 +64,15 @@
         border-bottom: 2px solid #007bff;
         padding-bottom: 10px;
       }
+      .delete-button {
+        margin-bottom: 16px;
+        background: #d9534f;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -99,6 +108,9 @@
         </div>
         <pre class="kv-value">{{ item.value }}</pre>
       </div>
+      <button @click="deleteAll" class="delete-button">
+        全データ削除
+      </button>
     </div>
     <script src="./app.js"></script>
   </body>

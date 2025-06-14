@@ -22,11 +22,6 @@ createApp({
 
     function connectWebSocket() {
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      // debug_server.ts が 8081 ポートで起動することを想定
-      // 通常のWebサーバー(Viteなど)が異なるポートで動作している場合、
-      // WebSocketの接続先を明示的に指定する必要があります。
-      // 例: const wsUrl = `${wsProtocol}//localhost:8081/ws/kv-debug`;
-      // 今回は /debug-kv-view と同じホスト・ポートで /ws/kv-debug に接続すると仮定
       const wsUrl = `${wsProtocol}//${window.location.host}/ws/kv-debug`;
 
       socket = new WebSocket(wsUrl);
@@ -93,6 +88,24 @@ createApp({
         });
     }
 
+    function deleteAll() {
+      fetch('/api/kv-debug/delete-all', {
+        method: 'POST',
+      })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(err => {
+              throw new Error(err.error || 'Failed to delete all entries');
+            });
+          }
+          console.log('All delete request sent');
+        })
+        .catch(err => {
+          console.error('Error deleting all entries:', err);
+          error.value = err.message;
+        });
+    }
+
     connectWebSocket();
 
     return {
@@ -100,12 +113,14 @@ createApp({
       error,
       wsStatus,
       wsStatusColor,
-      deleteEntry, // deleteEntryを返す
+      deleteEntry,
+      deleteAll, // 追加
     };
   },
   template: `
     <div class="container">
       <h1>Deno KV Debug Viewer</h1>
+      <button @click="deleteAll" class="delete-button" style="margin-bottom: 16px; background: #d9534f; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">全データ削除</button>
       <p>WebSocket Status: <span :style="{ color: wsStatusColor }">{{ wsStatus }}</span></p>
       <div v-if="error" class="error-message">
         <p>Error: {{ error }}</p>

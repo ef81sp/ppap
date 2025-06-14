@@ -42,16 +42,18 @@ async function getAllKvData() {
 
 async function initializeWatcher() {
   if (watcherInitialized) return;
-  await initializeKv(); // kvインスタンスを確実に初期化
+  await initializeKv();
   watcherInitialized = true;
 
-  console.log('Initializing KV watcher for debug view...');
-  (async () => {
+  console.log('Starting polling-based KV watcher for debug view...');
+  let lastDataJson = '';
+  setInterval(async () => {
     try {
-      const watcher = kv!.watch([[]]);
-      for await (const changes of watcher) {
-        // console.log("KV store changed (debug view):", changes.map(c => c.key));
-        const currentData = await getAllKvData();
+      const currentData = await getAllKvData();
+      const currentDataJson = JSON.stringify(currentData);
+      if (currentDataJson !== lastDataJson) {
+        console.log('KV store changed (polling debug view)');
+        lastDataJson = currentDataJson;
         for (const socket of sockets) {
           if (socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({ type: 'update', data: currentData }));
@@ -59,14 +61,9 @@ async function initializeWatcher() {
         }
       }
     } catch (err) {
-      console.error('KV watcher error (debug view):', err);
-      watcherInitialized = false; // エラー発生時は再初期化を試みれるように
+      console.error('Polling KV watcher error (debug view):', err);
     }
-  })().catch(err => {
-    // このcatchはasync IIFE自体のエラー用
-    console.error('Error in KV watcher IIFE (debug view):', err);
-    watcherInitialized = false;
-  });
+  }, 1000); // 1秒ごとに監視
 }
 
 export async function handleKvDebugRequest(
