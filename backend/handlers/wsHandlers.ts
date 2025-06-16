@@ -82,9 +82,23 @@ export function handleWebSocket(
             await kv.atomic().set(['rooms', roomId], room).commit();
           }
         }
+      } else if (msg.type === 'clearAnswer' && socketObj.userToken) {
+        const roomRes = await kv.get<import('../type.ts').Room>([
+          'rooms',
+          roomId,
+        ]);
+        const room = roomRes.value;
+        if (room) {
+          // 全員の回答を消去
+          for (const participant of room.participants) {
+            participant.answer = '';
+          }
+          room.updatedAt = Date.now();
+          await kv.atomic().set(['rooms', roomId], room).commit();
+        }
       }
     } catch (_e) {
-      // パース失敗や処理失敗時は何もしない
+      console.error(_e);
     }
   };
   socket.onclose = () => {
