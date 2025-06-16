@@ -1,15 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { room, setName, user, setRoom, setToken } from '../composables/store'; // src/ を削除
 import { useRoute, useRouter } from 'vue-router';
 
 import InputName from './InputName.vue';
-import {
-  sendAnswer,
-  sendEnterTheRoom,
-  sendClearAnswer,
-  connectWebSocket, // Add this line
-} from '../composables/webSocket';
 import RoomParticipant from './RoomParticipant.vue';
 import RoomAnswerButton from './RoomAnswerButton.vue';
 import VButton from './VButton.vue';
@@ -23,28 +17,6 @@ const step = computed(() => {
     return 'name register';
   }
   return 'inside room';
-});
-
-// 無理やりでやばい。WebSocketのメッセージを追加して、participantにisAudienceステータスをもたせるべきだ。
-const isAudience = ref(false);
-watchEffect(() => {
-  if (
-    isAudience.value &&
-    room.value.participants.find(p => p.isMe)?.answer === ''
-  ) {
-    sendAnswer('-1');
-  }
-});
-watch(isAudience, (newValue, oldValue) => {
-  sessionStorage.setItem('isAudience', newValue.toString());
-  if (newValue === true && oldValue === false) {
-    sendAnswer('-1');
-    return;
-  }
-  if (newValue === false && oldValue === true) {
-    sendAnswer('');
-    return;
-  }
 });
 
 const enterTheRoom = async (userName: string) => {
@@ -62,10 +34,6 @@ const enterTheRoom = async (userName: string) => {
     alert('ルーム参加に失敗しました');
     return;
   }
-  const _isAudience = sessionStorage.getItem('isAudience');
-  if (_isAudience === 'true') {
-    isAudience.value = true;
-  }
 };
 
 const tryRejoinRoom = async () => {
@@ -77,7 +45,6 @@ const tryRejoinRoom = async () => {
     setRoom(res.room);
     setName(res.userName);
     setToken(res.userToken);
-
     sessionStorage.setItem('roomId', roomId);
     sessionStorage.setItem('userToken', res.userToken);
     sessionStorage.setItem('userName', res.userName);

@@ -14,7 +14,7 @@ import {
 } from '../kv.ts';
 
 // Room型からRoomForClient型へ変換する関数
-function toRoomForClient(room: Room, userToken: string): RoomForClient {
+export function toRoomForClient(room: Room, userToken: string): RoomForClient {
   return {
     id: room.id,
     participants: room.participants.map((p, i) => ({
