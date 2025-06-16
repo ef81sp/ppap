@@ -11,7 +11,10 @@ export function handleWebSocket(
   request: Request,
   roomId: string,
   kv: Deno.Kv,
-  upgradeWebSocket: (req: Request) => { socket: WebSocket; response: Response } = Deno.upgradeWebSocket
+  upgradeWebSocket: (req: Request) => {
+    socket: WebSocket;
+    response: Response;
+  } = Deno.upgradeWebSocket
 ): Response {
   if (request.headers.get('upgrade') != 'websocket') {
     return new Response('Not a websocket request', { status: 400 });
@@ -43,10 +46,15 @@ export function handleWebSocket(
         // 回答メッセージ受信時、Roomを更新
         const answer = msg.answer;
         if (typeof answer === 'string' && socketObj.userToken) {
-          const roomRes = await kv.get<import('../type.ts').Room>(['rooms', roomId]);
+          const roomRes = await kv.get<import('../type.ts').Room>([
+            'rooms',
+            roomId,
+          ]);
           const room = roomRes.value;
           if (room) {
-            const participant = room.participants.find(p => p.token === socketObj.userToken);
+            const participant = room.participants.find(
+              p => p.token === socketObj.userToken
+            );
             if (participant) {
               participant.answer = answer;
               room.updatedAt = Date.now();

@@ -1,42 +1,46 @@
-import { RoomId } from "@/backend/type.ts"
+import { RoomId } from '@/backend/type.ts';
 
 const msgType = {
-  answer: "answer",
-  clearAnswer: "clearAnswer",
-} as const
+  answer: 'answer',
+  clearAnswer: 'clearAnswer',
+} as const;
 
-type MsgFromClient = MsgAnswer | MsgClearAnswer
+type MsgFromClient = MsgAnswer | MsgClearAnswer;
 
 type MsgAnswer = {
-  type: (typeof msgType)["answer"]
-  answer: string
-}
+  type: (typeof msgType)['answer'];
+  answer: string;
+};
 type MsgClearAnswer = {
-  type: (typeof msgType)["clearAnswer"]
-}
+  type: (typeof msgType)['clearAnswer'];
+};
 
 export const isMsgFromClient = (data: unknown): data is MsgFromClient => {
-  if (data == undefined) return false
-  if (typeof data !== "object") return false
+  if (data == undefined) return false;
+  if (typeof data !== 'object') return false;
   if (
     !(
-      "type" in data &&
-      typeof (data as any).type === "string" &&
-      Object.values(msgType).some((v) => v === (data as any).type)
+      'type' in data &&
+      typeof (data as any).type === 'string' &&
+      Object.values(msgType).some(v => v === (data as any).type)
     )
   ) {
-    return false
+    return false;
   }
-  if ((data as any).type === "answer" && typeof (data as any).answer !== "string") return false;
-  return true
-}
+  if (
+    (data as any).type === 'answer' &&
+    typeof (data as any).answer !== 'string'
+  )
+    return false;
+  return true;
+};
 
 // =====================
 
 export const genMsgAnswer = (answer: string): MsgAnswer => ({
-  type: "answer",
+  type: 'answer',
   answer,
-})
+});
 export const genMsgClearAnswer = (): MsgClearAnswer => ({
-  type: "clearAnswer",
-})
+  type: 'clearAnswer',
+});
