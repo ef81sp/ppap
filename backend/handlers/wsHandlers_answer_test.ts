@@ -5,7 +5,6 @@ import { Room } from '../type.ts';
 Deno.test(
   'WebSocket: answerメッセージで参加者のanswerが更新される',
   async () => {
-    // テスト用roomIdとroomデータ
     const roomId = 'room1';
     const userToken = 'tokentest';
     const testRoom: Room = {
@@ -19,7 +18,6 @@ Deno.test(
       updatedAt: 2,
     };
     let savedRoom: Room | null = null;
-    // Deno.upgradeWebSocketの戻り値をモック
     const fakeSocket = {
       send: (_msg: string) => {},
       close: () => {},
@@ -33,7 +31,6 @@ Deno.test(
       socket: fakeSocket,
       response: new Response(null, { status: 101 }),
     });
-    // モックのDeno.Kv
     const kv = {
       get: (_key: unknown) => Promise.resolve({ value: savedRoom ?? testRoom }),
       atomic: () => ({
@@ -46,7 +43,6 @@ Deno.test(
       watch: () => ({ async *[Symbol.asyncIterator]() {} }),
     } as unknown as Deno.Kv;
 
-    // WebSocketリクエストを作成
     const req = new Request('http://localhost/ws/rooms/' + roomId, {
       method: 'GET',
       headers: {
@@ -56,21 +52,15 @@ Deno.test(
         'sec-websocket-version': '13',
       },
     });
-    // WebSocketハンドラを起動（upgradeWebSocketを注入）
     handleWebSocket(req, roomId, kv, upgradeWebSocket);
-    // 認証
-    // roomSocketsから本物のsocketObjを取得
     const wsHandlers = await import('./wsHandlers.ts');
     const wsSet = wsHandlers.roomSockets.get(roomId);
     if (!wsSet) throw new Error('roomSockets not set');
     const wsEntry = Array.from(wsSet)[0];
     wsEntry.userToken = userToken;
-    // answerメッセージを送信
     const answerMsg = JSON.stringify({ type: 'answer', answer: '5' });
     if (!wsEntry.socket.onmessage) throw new Error('onmessage not set');
-    // @ts-ignore: テスト用にMessageEvent型を省略
     await wsEntry.socket.onmessage({ data: answerMsg });
-    // 参加者のanswerが更新されたか
     if (!savedRoom) throw new Error('Room not saved');
     const room: Room = savedRoom as Room;
     assertEquals(room.participants[0].answer, '5');
@@ -80,7 +70,6 @@ Deno.test(
 Deno.test(
   'WebSocket: setAudienceメッセージで参加者のisAudienceが更新される',
   async () => {
-    // テスト用roomIdとroomデータ
     const roomId = 'room2';
     const userToken = 'tokentest2';
     const testRoom: Room = {
@@ -94,7 +83,6 @@ Deno.test(
       updatedAt: 2,
     };
     let savedRoom: Room | null = null;
-    // Deno.upgradeWebSocketの戻り値をモック
     const fakeSocket = {
       send: (_msg: string) => {},
       close: () => {},
@@ -108,7 +96,6 @@ Deno.test(
       socket: fakeSocket,
       response: new Response(null, { status: 101 }),
     });
-    // モックのDeno.Kv
     const kv = {
       get: (_key: unknown) => Promise.resolve({ value: savedRoom ?? testRoom }),
       atomic: () => ({
@@ -121,7 +108,6 @@ Deno.test(
       watch: () => ({ async *[Symbol.asyncIterator]() {} }),
     } as unknown as Deno.Kv;
 
-    // WebSocketリクエストを作成
     const req = new Request('http://localhost/ws/rooms/' + roomId, {
       method: 'GET',
       headers: {
@@ -131,23 +117,18 @@ Deno.test(
         'sec-websocket-version': '13',
       },
     });
-    // WebSocketハンドラを起動（upgradeWebSocketを注入）
     handleWebSocket(req, roomId, kv, upgradeWebSocket);
-    // 認証
     const wsHandlers = await import('./wsHandlers.ts');
     const wsSet = wsHandlers.roomSockets.get(roomId);
     if (!wsSet) throw new Error('roomSockets not set');
     const wsEntry = Array.from(wsSet)[0];
     wsEntry.userToken = userToken;
-    // setAudienceメッセージを送信
     const setAudienceMsg = JSON.stringify({
       type: 'setAudience',
       isAudience: true,
     });
     if (!wsEntry.socket.onmessage) throw new Error('onmessage not set');
-    // @ts-ignore: テスト用にMessageEvent型を省略
     await wsEntry.socket.onmessage({ data: setAudienceMsg });
-    // 参加者のisAudienceが更新されたか
     if (!savedRoom) throw new Error('Room not saved');
     const room: Room = savedRoom as Room;
     assertEquals(room.participants[0].isAudience, true);

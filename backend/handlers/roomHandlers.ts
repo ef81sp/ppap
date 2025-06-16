@@ -13,7 +13,6 @@ import {
   leaveRoom,
 } from '../kv.ts';
 
-// Room型からRoomForClient型へ変換する関数
 export function toRoomForClient(room: Room, userToken: string): RoomForClient {
   return {
     id: room.id,
@@ -71,7 +70,7 @@ export async function handleCreateRoom(
   try {
     await createRoom(kv, room);
     await createUserToken(kv, userTokenInfo);
-    const userNumber = 0; // ルーム作成者は常に0番
+    const userNumber = 0;
     const res = {
       roomId,
       userToken,
@@ -152,7 +151,6 @@ export async function handleJoinRoom(
     room.updatedAt = Date.now();
     await kv.atomic().set(roomKey(roomId), room).commit();
   }
-  // userNumberを計算
   const userNumber = room.participants.findIndex(p => p.token === userToken);
   return new Response(
     JSON.stringify({
@@ -192,12 +190,9 @@ export async function handleLeaveRoom(
       status: 404,
     });
   }
-  // 参加者削除
   const idx = room.participants.findIndex(p => p.token === body.userToken);
   if (idx !== -1) {
     room.participants.splice(idx, 1);
-    // 旧: if (room.answers && body.userToken in room.answers) { delete room.answers[body.userToken]; }
-    // 新: 何もしない（answerはparticipants内にあるため、削除でOK）
     room.updatedAt = Date.now();
     const result = await leaveRoom(kv, room, roomId, body.userToken);
     if (!result.ok) {
@@ -206,7 +201,6 @@ export async function handleLeaveRoom(
       });
     }
   } else {
-    // 参加していない場合もuser_tokensとuser_rooms削除だけは行う
     const atomic = kv.atomic();
     atomic.delete(userTokenKey(body.userToken));
     atomic.delete([`user_rooms:${body.userToken}`]);
@@ -237,7 +231,6 @@ export async function handleRejoinRoom(
       status: 400,
     });
   }
-  // ユーザートークンの存在確認
   const userTokenInfoRes = await kv.get<UserTokenInfo>(userTokenKey(userToken));
   const userTokenInfo = userTokenInfoRes.value;
   if (!userTokenInfo) {
@@ -248,7 +241,6 @@ export async function handleRejoinRoom(
       }
     );
   }
-  // ルーム情報取得
   const roomRes = await kv.get<Room>(roomKey(roomId));
   const room = roomRes.value;
   if (!room) {
@@ -256,10 +248,8 @@ export async function handleRejoinRoom(
       status: 404,
     });
   }
-  // 参加者に自分がいるか確認
   const participant = room.participants.find(p => p.token === userToken);
   if (!participant) {
-    // 未参加者は404
     return new Response(
       JSON.stringify({ error: 'User not joined in this room' }),
       {
@@ -267,7 +257,6 @@ export async function handleRejoinRoom(
       }
     );
   }
-  // userNumberを計算
   const userNumber = room.participants.findIndex(p => p.token === userToken);
   return new Response(
     JSON.stringify({

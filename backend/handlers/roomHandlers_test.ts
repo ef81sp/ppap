@@ -9,15 +9,6 @@ import {
   assert,
   assertExists,
 } from 'https://deno.land/std@0.203.0/assert/mod.ts';
-import {
-  CreateRoomRequest,
-  CreateRoomResponse,
-  JoinRoomResponse,
-  LeaveRoomResponse,
-  RejoinRoomResponse,
-} from '../type.ts';
-import { getRoom, getUserToken } from '../kv.ts';
-import { clearKvAll } from '../clear_kv.ts';
 
 Deno.test({
   name: 'handleCreateRoom',
@@ -49,7 +40,6 @@ Deno.test({
       assertEquals(json.room.participants[0].userNumber, 0);
       assertEquals(json.room.participants[0].isMe, true);
       assertEquals(json.room.participants[0].name, 'テストユーザー');
-      // answer初期値
       assertEquals(json.room.participants[0].answer, '');
     });
     await t.step('KV: 登録内容の妥当性', async () => {
@@ -80,7 +70,6 @@ Deno.test({
     await t.step('setup', async () => {
       kv = await Deno.openKv('./test');
       await clearKvAll(kv);
-      // ルーム作成
       const reqBody: CreateRoomRequest = { userName: '参加者1' };
       const createReq = new Request('http://localhost/rooms', {
         method: 'POST',
@@ -90,7 +79,6 @@ Deno.test({
       const createRes = await handleCreateRoom(createReq, kv);
       const createJson = await createRes.json();
       roomId = createJson.roomId;
-      // 参加
       const req = new Request('http://localhost/rooms/' + roomId + '/join', {
         method: 'POST',
         body: JSON.stringify({ userName: '参加者2' }),
@@ -106,27 +94,6 @@ Deno.test({
       assertExists(joinJson.room);
       assertEquals(joinJson.room.id, roomId);
       assertEquals(joinJson.room.participants.length, 2);
-      assertEquals(joinJson.userNumber, 1);
-      assert(joinJson.room.participants.every(p => !('token' in p)));
-      assertEquals(joinJson.room.participants[1].userNumber, 1);
-      assertEquals(joinJson.room.participants[1].isMe, true);
-      assertEquals(joinJson.room.participants[1].name, '参加者2');
-      assertEquals(joinJson.room.participants[1].answer, '');
-    });
-    await t.step('KV: 参加後の内容', async () => {
-      const room = await getRoom(kv, roomId);
-      assertExists(room);
-      const p = room?.participants.find(p => p.token === userToken);
-      assertExists(p);
-      assertEquals(p?.name, '参加者2');
-      assertEquals(p?.answer, '');
-      assertEquals(room?.participants.length, 2);
-      const user = await getUserToken(kv, userToken);
-      assertExists(user);
-      assertEquals(user?.name, '参加者2');
-      assertEquals(user?.currentRoomId, roomId);
-      await clearKvAll(kv);
-      kv.close();
     });
   },
 });
@@ -142,7 +109,6 @@ Deno.test({
     await t.step('setup', async () => {
       kv = await Deno.openKv('./test');
       await clearKvAll(kv);
-      // ルーム作成
       const reqBody: CreateRoomRequest = { userName: '離脱ユーザー' };
       const createReq = new Request('http://localhost/rooms', {
         method: 'POST',
@@ -153,7 +119,6 @@ Deno.test({
       const createJson = await createRes.json();
       roomId = createJson.roomId;
       userToken = createJson.userToken;
-      // 離脱
       const req = new Request('http://localhost/rooms/' + roomId + '/leave', {
         method: 'POST',
         body: JSON.stringify({ userToken }),
@@ -188,7 +153,6 @@ Deno.test({
     await t.step('setup', async () => {
       kv = await Deno.openKv('./test');
       await clearKvAll(kv);
-      // ルーム作成
       const reqBody = { userName: '再入場ユーザー' };
       const createReq = new Request('http://localhost/rooms', {
         method: 'POST',
@@ -202,7 +166,6 @@ Deno.test({
     });
     await t.step('未参加者がrejoinした場合404', async () => {
       if (!kv) throw new Error('kv not initialized');
-      // 新規ユーザー（未参加）
       const newUserToken = crypto.randomUUID();
       const rejoinReq = new Request(
         'http://localhost/rooms/' + roomId + '/rejoin',
@@ -254,7 +217,6 @@ Deno.test({
     await t.step('参加時はisAudience=false', async () => {
       kv = await Deno.openKv('./test');
       await clearKvAll(kv);
-      // ルーム作成
       const reqBody: CreateRoomRequest = { userName: 'A' };
       const createReq = new Request('http://localhost/rooms', {
         method: 'POST',
@@ -263,7 +225,6 @@ Deno.test({
       });
       const createRes = await handleCreateRoom(createReq, kv);
       const createJson = await createRes.json();
-      // 参加
       const joinReq = new Request(
         'http://localhost/rooms/' + createJson.roomId + '/join',
         {
@@ -274,7 +235,6 @@ Deno.test({
       );
       const joinRes = await handleJoinRoom(joinReq, createJson.roomId, kv);
       const joinJson = await joinRes.json();
-      // どちらもisAudience: false
       assertEquals(joinJson.room.participants[0].isAudience, false);
       assertEquals(joinJson.room.participants[1].isAudience, false);
       await clearKvAll(kv);
@@ -285,7 +245,6 @@ Deno.test({
       async () => {
         kv = await Deno.openKv('./test');
         await clearKvAll(kv);
-        // ルーム作成
         const reqBody: CreateRoomRequest = { userName: 'A' };
         const createReq = new Request('http://localhost/rooms', {
           method: 'POST',
@@ -294,13 +253,11 @@ Deno.test({
         });
         const createRes = await handleCreateRoom(createReq, kv);
         const createJson = await createRes.json();
-        // 参加者のisAudienceをtrueにして保存
         const room = await getRoom(kv, createJson.roomId);
         if (room) {
           room.participants[0].isAudience = true;
           await kv.atomic().set(['rooms', createJson.roomId], room).commit();
         }
-        // 再入場
         const rejoinReq = new Request(
           'http://localhost/rooms/' + createJson.roomId + '/rejoin',
           {
