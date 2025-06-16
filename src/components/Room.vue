@@ -8,6 +8,7 @@ import RoomParticipant from './RoomParticipant.vue';
 import RoomAnswerButton from './RoomAnswerButton.vue';
 import VButton from './VButton.vue';
 import { joinRoomApi, rejoinRoomApi } from '../fetchApi';
+import { useRoomWebSocket } from '../composables/webSocket';
 
 const route = useRoute();
 const router = useRouter();
@@ -90,9 +91,26 @@ const exit = async () => {
       console.error('退室API通信エラー', e);
     }
   }
+  ws.value?.close(); // ここでWebSocket切断
   sessionStorage.clear();
   router.push('/');
 };
+
+const ws = ref<ReturnType<typeof useRoomWebSocket> | null>(null);
+
+watch(
+  () => room.value?.id,
+  roomId => {
+    if (roomId) {
+      ws.value = useRoomWebSocket(roomId);
+      ws.value.open(); // ルーム入室時にWebSocket接続
+    } else {
+      ws.value?.close();
+      ws.value = null;
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>

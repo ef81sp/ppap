@@ -8,8 +8,6 @@ import {
 } from './handlers/roomHandlers.ts';
 import {
   handleWebSocket,
-  _watchRoomUpdates,
-  _broadcastRoomUpdate,
 } from './handlers/wsHandlers.ts';
 
 const kv = await Deno.openKv();
