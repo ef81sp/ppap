@@ -16,3 +16,9 @@ export const room = ref<RoomForClient | null>(null);
 export const setRoom = (newRoom: RoomForClient) => {
   room.value = newRoom;
 };
+
+export const clearStore = () => {
+  user.name.value = '';
+  user.token.value = '';
+  room.value = null;
+};

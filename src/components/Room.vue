@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { room, setName, user, setRoom, setToken } from '../composables/store'; // src/ を削除
+import { room, setName, user, setRoom, setToken, clearStore } from '../composables/store'; // src/ を削除
 import { useRoute, useRouter } from 'vue-router';
 
 import InputName from './InputName.vue';
@@ -99,6 +99,7 @@ const exit = async () => {
   }
   ws.value?.close(); // ここでWebSocket切断
   sessionStorage.clear();
+  clearStore(); // ストアもクリア
   router.push('/');
 };
 
