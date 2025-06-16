@@ -9,6 +9,7 @@ import RoomAnswerButton from './RoomAnswerButton.vue';
 import VButton from './VButton.vue';
 import { joinRoomApi, rejoinRoomApi } from '../fetchApi';
 import { useRoomWebSocket } from '../composables/webSocket';
+import { genMsgAnswer } from '../../wsMsg/msgFromClient';
 
 const route = useRoute();
 const router = useRouter();
@@ -72,6 +73,11 @@ const selectingAnswer = computed<string>(() => {
   const me = room.value.participants.find(p => p.isMe);
   return me ? me.answer : '';
 });
+
+const sendAnswer = (answer: string) => {
+  if (!ws.value) return;
+  ws.value.send(JSON.stringify(genMsgAnswer(answer)));
+};
 
 const exit = async () => {
   const roomId = route.params.roomId;

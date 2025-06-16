@@ -10,12 +10,13 @@ const roomWatchers = new Map<string, boolean>();
 export function handleWebSocket(
   request: Request,
   roomId: string,
-  kv: Deno.Kv
+  kv: Deno.Kv,
+  upgradeWebSocket: (req: Request) => { socket: WebSocket; response: Response } = Deno.upgradeWebSocket
 ): Response {
   if (request.headers.get('upgrade') != 'websocket') {
     return new Response('Not a websocket request', { status: 400 });
   }
-  const { socket, response } = Deno.upgradeWebSocket(request);
+  const { socket, response } = upgradeWebSocket(request);
   // ルームごとにソケットを管理
   if (!roomSockets.has(roomId)) roomSockets.set(roomId, new Set());
   // userTokenは最初はnull、後でクライアントから受信してセット
@@ -30,11 +31,32 @@ export function handleWebSocket(
       roomWatchers.set(roomId, true);
     }
   };
-  socket.onmessage = event => {
+  socket.onmessage = async event => {
     if (handleAuthMessage(socketObj, event.data)) return;
     if (event.data === 'ping') {
       socket.send('pong');
       return;
+    }
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'answer') {
+        // 回答メッセージ受信時、Roomを更新
+        const answer = msg.answer;
+        if (typeof answer === 'string' && socketObj.userToken) {
+          const roomRes = await kv.get<import('../type.ts').Room>(['rooms', roomId]);
+          const room = roomRes.value;
+          if (room) {
+            const participant = room.participants.find(p => p.token === socketObj.userToken);
+            if (participant) {
+              participant.answer = answer;
+              room.updatedAt = Date.now();
+              await kv.atomic().set(['rooms', roomId], room).commit();
+            }
+          }
+        }
+      }
+    } catch (_e) {
+      // パース失敗や処理失敗時は何もしない
     }
   };
   socket.onclose = () => {
