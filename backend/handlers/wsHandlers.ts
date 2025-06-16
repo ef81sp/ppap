@@ -48,7 +48,10 @@ export function handleWebSocket(
 }
 
 // --- テストしやすいようuserToken認証処理を分離 ---
-export function handleAuthMessage(socketObj: { userToken: string | null }, data: string) {
+export function handleAuthMessage(
+  socketObj: { userToken: string | null },
+  data: string
+) {
   try {
     const msg = JSON.parse(data);
     if (msg.type === 'auth' && typeof msg.userToken === 'string') {
@@ -94,13 +97,17 @@ export async function startRoomWatcherForRoomOnce(roomId: string, kv: Deno.Kv) {
     for (const entry of entries) {
       const key = entry.key;
       const value = entry.value;
-      if (!Array.isArray(key) || key[0] !== "rooms" || key[1] !== roomId) continue;
+      if (!Array.isArray(key) || key[0] !== 'rooms' || key[1] !== roomId)
+        continue;
       const sockets = roomSockets.get(roomId);
       if (!sockets || sockets.size === 0) continue;
       for (const wsObj of sockets) {
         if (!wsObj.userToken) continue;
         try {
-          const roomForClient = toRoomForClient(value as import('../type.ts').Room, wsObj.userToken);
+          const roomForClient = toRoomForClient(
+            value as import('../type.ts').Room,
+            wsObj.userToken
+          );
           const msg = JSON.stringify({ type: 'room', room: roomForClient });
           wsObj.socket.send(msg);
         } catch (_e) {}

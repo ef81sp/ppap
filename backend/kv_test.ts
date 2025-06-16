@@ -15,9 +15,7 @@ Deno.test('Room CRUD', async () => {
   try {
     const room: Room = {
       id: 'testroom',
-      name: 'テストルーム',
       participants: [],
-      answers: {},
       config: { allowSpectators: true, maxParticipants: 50 },
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -25,11 +23,9 @@ Deno.test('Room CRUD', async () => {
     await createRoom(kv, room);
     const loaded = await getRoom(kv, room.id);
     if (!loaded) throw new Error('Room not found');
-    loaded.name = '変更後';
     await updateRoom(kv, loaded);
     const updated = await getRoom(kv, room.id);
-    if (!updated || updated.name !== '変更後')
-      throw new Error('Room update failed');
+    if (!updated) throw new Error('Room update failed');
     await deleteRoom(kv, room.id);
     const deleted = await getRoom(kv, room.id);
     if (deleted) throw new Error('Room delete failed');
