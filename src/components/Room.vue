@@ -117,6 +117,15 @@ watch(
   },
   { immediate: true }
 );
+
+// --- 全員回答済みなら自動で公開（computedで管理） ---
+const isOpen = computed(() => {
+  if (!room.value) return false;
+  const participants = room.value.participants;
+  // 観戦者（answerが"-1"）を除外
+  const answerable = participants.filter(p => p.answer !== '-1');
+  return answerable.length > 0 && answerable.every(p => p.answer !== '');
+});
 </script>
 
 <template>
@@ -135,7 +144,7 @@ watch(
         v-for="p in room && room.participants"
         :key="p.userNumber"
         :participant="p"
-        :is-open="room && room.isOpen"
+        :is-open="isOpen"
       />
     </section>
     <section class="mt-8">
