@@ -41,6 +41,7 @@ const cardClass = computed(() => {
     <div :class="cardClass" v-else></div>
   </Transition>
 </template>
+
 <style scoped>
 .v-enter-active,
 .v-leave-active {

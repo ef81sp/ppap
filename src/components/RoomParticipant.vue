@@ -8,7 +8,7 @@ const props = defineProps<{
   isOpen: boolean;
 }>();
 const answer = computed(() => {
-  if (props.participant.answer === '-1') return '-1';
+  if (props.participant.isAudience) return '';
   if (props.participant.answer === '') return '';
   if (props.isOpen) return props.participant.answer;
   return '?';
@@ -17,10 +17,9 @@ const answer = computed(() => {
 <template>
   <article class="w-32 flex flex-col-reverse items-center">
     <h3 class="m-1 w-full truncate">{{ participant.name }}</h3>
-    <!-- Audience の場合、 Room.vue からそれを示す値として -1 を送っている -->
     <div
-      v-if="answer === '-1'"
-      class="aspect-[63/88] text-5xl w-20 grid place-items-center border-2 rounded-sm border-dashed border-black"
+      v-if="participant.isAudience"
+      class="aspect-[63/88] text-5xl w-20 grid place-items-center border-2 rounded-sm border-dashed border-black bg-gray-100"
     >
       <p class="rotate-[54deg] text-base text-center">Audience</p>
     </div>

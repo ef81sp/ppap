@@ -62,6 +62,26 @@ export function handleWebSocket(
             }
           }
         }
+      } else if (
+        msg.type === 'setAudience' &&
+        typeof msg.isAudience === 'boolean' &&
+        socketObj.userToken
+      ) {
+        const roomRes = await kv.get<import('../type.ts').Room>([
+          'rooms',
+          roomId,
+        ]);
+        const room = roomRes.value;
+        if (room) {
+          const participant = room.participants.find(
+            p => p.token === socketObj.userToken
+          );
+          if (participant) {
+            participant.isAudience = msg.isAudience;
+            room.updatedAt = Date.now();
+            await kv.atomic().set(['rooms', roomId], room).commit();
+          }
+        }
       }
     } catch (_e) {
       // パース失敗や処理失敗時は何もしない

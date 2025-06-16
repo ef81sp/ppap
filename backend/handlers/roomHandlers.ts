@@ -22,6 +22,7 @@ export function toRoomForClient(room: Room, userToken: string): RoomForClient {
       userNumber: i,
       isMe: p.token === userToken,
       answer: p.answer,
+      isAudience: p.isAudience ?? false,
     })),
     config: room.config,
     createdAt: room.createdAt,
@@ -53,7 +54,9 @@ export async function handleCreateRoom(
   const now = Date.now();
   const room: Room = {
     id: roomId,
-    participants: [{ token: userToken, name: userName, answer: '' }],
+    participants: [
+      { token: userToken, name: userName, answer: '', isAudience: false },
+    ],
     config: { allowSpectators: true, maxParticipants: 50 },
     createdAt: now,
     updatedAt: now,
@@ -144,6 +147,7 @@ export async function handleJoinRoom(
       token: userToken,
       name: body.userName,
       answer: '',
+      isAudience: false,
     });
     room.updatedAt = Date.now();
     await kv.atomic().set(roomKey(roomId), room).commit();

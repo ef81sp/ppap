@@ -246,3 +246,79 @@ Deno.test({
     }
   },
 });
+
+Deno.test({
+  name: 'isAudienceフラグの初期値と反映',
+  fn: async t => {
+    let kv: Deno.Kv;
+    await t.step('参加時はisAudience=false', async () => {
+      kv = await Deno.openKv('./test');
+      await clearKvAll(kv);
+      // ルーム作成
+      const reqBody: CreateRoomRequest = { userName: 'A' };
+      const createReq = new Request('http://localhost/rooms', {
+        method: 'POST',
+        body: JSON.stringify(reqBody),
+        headers: { 'content-type': 'application/json' },
+      });
+      const createRes = await handleCreateRoom(createReq, kv);
+      const createJson = await createRes.json();
+      // 参加
+      const joinReq = new Request(
+        'http://localhost/rooms/' + createJson.roomId + '/join',
+        {
+          method: 'POST',
+          body: JSON.stringify({ userName: 'B' }),
+          headers: { 'content-type': 'application/json' },
+        }
+      );
+      const joinRes = await handleJoinRoom(joinReq, createJson.roomId, kv);
+      const joinJson = await joinRes.json();
+      // どちらもisAudience: false
+      assertEquals(joinJson.room.participants[0].isAudience, false);
+      assertEquals(joinJson.room.participants[1].isAudience, false);
+      await clearKvAll(kv);
+      kv.close();
+    });
+    await t.step(
+      'isAudience=trueで保存した場合toRoomForClientで反映',
+      async () => {
+        kv = await Deno.openKv('./test');
+        await clearKvAll(kv);
+        // ルーム作成
+        const reqBody: CreateRoomRequest = { userName: 'A' };
+        const createReq = new Request('http://localhost/rooms', {
+          method: 'POST',
+          body: JSON.stringify(reqBody),
+          headers: { 'content-type': 'application/json' },
+        });
+        const createRes = await handleCreateRoom(createReq, kv);
+        const createJson = await createRes.json();
+        // 参加者のisAudienceをtrueにして保存
+        const room = await getRoom(kv, createJson.roomId);
+        if (room) {
+          room.participants[0].isAudience = true;
+          await kv.atomic().set(['rooms', createJson.roomId], room).commit();
+        }
+        // 再入場
+        const rejoinReq = new Request(
+          'http://localhost/rooms/' + createJson.roomId + '/rejoin',
+          {
+            method: 'POST',
+            body: JSON.stringify({ userToken: createJson.userToken }),
+            headers: { 'content-type': 'application/json' },
+          }
+        );
+        const rejoinRes = await handleRejoinRoom(
+          rejoinReq,
+          createJson.roomId,
+          kv
+        );
+        const rejoinJson = await rejoinRes.json();
+        assertEquals(rejoinJson.room.participants[0].isAudience, true);
+        await clearKvAll(kv);
+        kv.close();
+      }
+    );
+  },
+});

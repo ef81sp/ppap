@@ -15,6 +15,7 @@ export type Room = {
     token: UserToken;
     name: string;
     answer: string;
+    isAudience: boolean;
   }>;
   config: {
     allowSpectators: boolean;
@@ -32,6 +33,7 @@ export type RoomForClient = {
     userNumber: number;
     isMe: boolean;
     answer: string;
+    isAudience: boolean;
     // 必要に応じて他の公開情報を追加
   }>;
   config: {

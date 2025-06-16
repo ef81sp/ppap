@@ -9,7 +9,7 @@ import RoomAnswerButton from './RoomAnswerButton.vue';
 import VButton from './VButton.vue';
 import { joinRoomApi, rejoinRoomApi } from '../fetchApi';
 import { useRoomWebSocket } from '../composables/webSocket';
-import { genMsgAnswer } from '../../wsMsg/msgFromClient';
+import { genMsgAnswer, genMsgSetAudience } from '../../wsMsg/msgFromClient';
 
 const route = useRoute();
 const router = useRouter();
@@ -104,6 +104,19 @@ const exit = async () => {
 
 const ws = ref<ReturnType<typeof useRoomWebSocket> | null>(null);
 
+// 自分のisAudience状態を取得
+const isAudience = computed({
+  get() {
+    if (!room.value) return false;
+    const me = room.value.participants.find(p => p.isMe);
+    return me ? me.isAudience : false;
+  },
+  set(val: boolean) {
+    if (!ws.value) return;
+    ws.value.send(JSON.stringify(genMsgSetAudience(val)));
+  },
+});
+
 watch(
   () => room.value?.id,
   roomId => {
@@ -122,8 +135,8 @@ watch(
 const isOpen = computed(() => {
   if (!room.value) return false;
   const participants = room.value.participants;
-  // 観戦者（answerが"-1"）を除外
-  const answerable = participants.filter(p => p.answer !== '-1');
+  // 観戦者（isAudience）を除外
+  const answerable = participants.filter(p => !p.isAudience);
   return answerable.length > 0 && answerable.every(p => p.answer !== '');
 });
 </script>

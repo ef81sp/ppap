@@ -3,9 +3,10 @@ import { RoomId } from '@/backend/type.ts';
 const msgType = {
   answer: 'answer',
   clearAnswer: 'clearAnswer',
+  setAudience: 'setAudience',
 } as const;
 
-type MsgFromClient = MsgAnswer | MsgClearAnswer;
+type MsgFromClient = MsgAnswer | MsgClearAnswer | MsgSetAudience;
 
 type MsgAnswer = {
   type: (typeof msgType)['answer'];
@@ -13,6 +14,10 @@ type MsgAnswer = {
 };
 type MsgClearAnswer = {
   type: (typeof msgType)['clearAnswer'];
+};
+type MsgSetAudience = {
+  type: (typeof msgType)['setAudience'];
+  isAudience: boolean;
 };
 
 export const isMsgFromClient = (data: unknown): data is MsgFromClient => {
@@ -43,4 +48,8 @@ export const genMsgAnswer = (answer: string): MsgAnswer => ({
 });
 export const genMsgClearAnswer = (): MsgClearAnswer => ({
   type: 'clearAnswer',
+});
+export const genMsgSetAudience = (isAudience: boolean): MsgSetAudience => ({
+  type: 'setAudience',
+  isAudience,
 });
