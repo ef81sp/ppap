@@ -10,8 +10,18 @@ Deno.test(
     const testRoom: Room = {
       id: roomId,
       participants: [
-        { token: userToken, name: 'user', answer: '' },
-        { token: 'other', name: 'other', answer: '' },
+        {
+          token: userToken,
+          name: 'user',
+          answer: '',
+          isAudience: false,
+        },
+        {
+          token: 'other',
+          name: 'other',
+          answer: '',
+          isAudience: false,
+        },
       ],
       config: { allowSpectators: true, maxParticipants: 10 },
       createdAt: 1,
@@ -60,7 +70,7 @@ Deno.test(
     wsEntry.userToken = userToken;
     const answerMsg = JSON.stringify({ type: 'answer', answer: '5' });
     if (!wsEntry.socket.onmessage) throw new Error('onmessage not set');
-    await wsEntry.socket.onmessage({ data: answerMsg });
+    await wsEntry.socket.onmessage({ data: answerMsg } as MessageEvent<any>);
     if (!savedRoom) throw new Error('Room not saved');
     const room: Room = savedRoom as Room;
     assertEquals(room.participants[0].answer, '5');
@@ -128,7 +138,7 @@ Deno.test(
       isAudience: true,
     });
     if (!wsEntry.socket.onmessage) throw new Error('onmessage not set');
-    await wsEntry.socket.onmessage({ data: setAudienceMsg });
+    await wsEntry.socket.onmessage({ data: setAudienceMsg } as MessageEvent<any>);
     if (!savedRoom) throw new Error('Room not saved');
     const room: Room = savedRoom as Room;
     assertEquals(room.participants[0].isAudience, true);

@@ -1,3 +1,12 @@
+import { clearKvAll } from '../clear_kv.ts';
+import { getRoom, getUserToken } from '../kv.ts';
+import {
+  CreateRoomRequest,
+  CreateRoomResponse,
+  JoinRoomResponse,
+  LeaveRoomResponse,
+  RejoinRoomResponse,
+} from '../type.ts';
 import {
   handleCreateRoom,
   handleJoinRoom,
@@ -94,6 +103,10 @@ Deno.test({
       assertExists(joinJson.room);
       assertEquals(joinJson.room.id, roomId);
       assertEquals(joinJson.room.participants.length, 2);
+    });
+    await t.step('cleanup', async () => {
+      await clearKvAll(kv);
+      kv.close();
     });
   },
 });
