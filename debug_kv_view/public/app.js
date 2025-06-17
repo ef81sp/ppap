@@ -1,100 +1,100 @@
-const { createApp, ref, computed } = Vue;
+const { createApp, ref, computed } = Vue
 
 createApp({
   setup() {
-    const kvData = ref([]);
-    const error = ref(null);
-    const wsStatus = ref('Connecting...');
-    let socket = null;
+    const kvData = ref([])
+    const error = ref(null)
+    const wsStatus = ref("Connecting...")
+    let socket = null
 
     const wsStatusColor = computed(() => {
       switch (wsStatus.value) {
-        case 'Connected':
-          return 'green';
-        case 'Disconnected':
-          return 'red';
-        case 'Error':
-          return 'red';
+        case "Connected":
+          return "green"
+        case "Disconnected":
+          return "red"
+        case "Error":
+          return "red"
         default:
-          return 'orange';
+          return "orange"
       }
-    });
+    })
 
     function connectWebSocket() {
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${wsProtocol}//${window.location.host}/ws/kv-debug`;
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+      const wsUrl = `${wsProtocol}//${window.location.host}/ws/kv-debug`
 
-      socket = new WebSocket(wsUrl);
+      socket = new WebSocket(wsUrl)
 
       socket.onopen = () => {
-        wsStatus.value = 'Connected';
-        error.value = null;
-      };
+        wsStatus.value = "Connected"
+        error.value = null
+      }
 
-      socket.onmessage = event => {
+      socket.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data);
-          if (message.type === 'initial' || message.type === 'update') {
-            kvData.value = message.data;
-            error.value = null;
-          } else if (message.type === 'error') {
-            error.value = message.message;
+          const message = JSON.parse(event.data)
+          if (message.type === "initial" || message.type === "update") {
+            kvData.value = message.data
+            error.value = null
+          } else if (message.type === "error") {
+            error.value = message.message
           }
         } catch (_e) {
-          error.value = 'Received malformed data from server.';
+          error.value = "Received malformed data from server."
         }
-      };
+      }
 
       socket.onerror = () => {
         error.value =
-          'WebSocket connection error. Check the server console or if the debug server is running on the correct port.';
-        wsStatus.value = 'Error';
-      };
+          "WebSocket connection error. Check the server console or if the debug server is running on the correct port."
+        wsStatus.value = "Error"
+      }
 
       socket.onclose = () => {
-        wsStatus.value = 'Disconnected';
-        setTimeout(connectWebSocket, 5000);
-      };
+        wsStatus.value = "Disconnected"
+        setTimeout(connectWebSocket, 5000)
+      }
     }
 
     function deleteEntry(keyString) {
-      const key = keyString.split(' : ');
-      fetch('/api/kv-debug/delete-entry', {
-        method: 'DELETE',
+      const key = keyString.split(" : ")
+      fetch("/api/kv-debug/delete-entry", {
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ key }),
       })
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
-            return response.json().then(err => {
-              throw new Error(err.error || 'Failed to delete entry');
-            });
+            return response.json().then((err) => {
+              throw new Error(err.error || "Failed to delete entry")
+            })
           }
         })
-        .catch(err => {
-          error.value = err.message;
-        });
+        .catch((err) => {
+          error.value = err.message
+        })
     }
 
     function deleteAll() {
-      fetch('/api/kv-debug/delete-all', {
-        method: 'POST',
+      fetch("/api/kv-debug/delete-all", {
+        method: "POST",
       })
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
-            return response.json().then(err => {
-              throw new Error(err.error || 'Failed to delete all entries');
-            });
+            return response.json().then((err) => {
+              throw new Error(err.error || "Failed to delete all entries")
+            })
           }
         })
-        .catch(err => {
-          error.value = err.message;
-        });
+        .catch((err) => {
+          error.value = err.message
+        })
     }
 
-    connectWebSocket();
+    connectWebSocket()
 
     return {
       kvData,
@@ -103,7 +103,7 @@ createApp({
       wsStatusColor,
       deleteEntry,
       deleteAll,
-    };
+    }
   },
   template: `
     <div class="container">
@@ -126,4 +126,4 @@ createApp({
       </ul>
     </div>
   `,
-}).mount('#app');
+}).mount("#app")

@@ -136,8 +136,11 @@ export function handleWebSocket(
       const timer = setTimeout(async () => {
         // leaveRoom関数を新しい呼び出し方で利用
         if (socketObj.userToken) {
-          await import("../kv.ts").then(async kvmod => {
-            await kvmod.leaveRoom(kv, { roomId, userToken: socketObj.userToken! })
+          await import("../kv.ts").then(async (kvmod) => {
+            await kvmod.leaveRoom(kv, {
+              roomId,
+              userToken: socketObj.userToken!,
+            })
           })
         }
         disconnectTimers.delete(key)

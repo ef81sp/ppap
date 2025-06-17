@@ -81,7 +81,11 @@ export async function leaveRoom(
     userToken: UserToken
   },
 ): Promise<{ ok: boolean; error?: string }> {
-  let { room, roomId, userToken } = options as { room: Room | null | undefined, roomId: RoomId | undefined, userToken: UserToken };
+  let { room, roomId, userToken } = options as {
+    room: Room | null | undefined
+    roomId: RoomId | undefined
+    userToken: UserToken
+  }
   // room, roomIdがなければuserTokenから取得
   if (!room || !roomId) {
     const userTokenInfo = await getUserToken(kv, userToken)
