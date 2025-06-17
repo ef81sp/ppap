@@ -27,7 +27,6 @@ createApp({
       socket = new WebSocket(wsUrl)
 
       socket.onopen = () => {
-        console.log("WebSocket connection established")
         wsStatus.value = "Connected"
         error.value = null
       }
@@ -39,26 +38,21 @@ createApp({
             kvData.value = message.data
             error.value = null
           } else if (message.type === "error") {
-            console.error("Server error:", message.message)
             error.value = message.message
           }
-        } catch (e) {
-          console.error("Failed to parse WebSocket message:", e)
+        } catch (_e) {
           error.value = "Received malformed data from server."
         }
       }
 
-      socket.onerror = (err) => {
-        console.error("WebSocket error:", err)
+      socket.onerror = () => {
         error.value =
           "WebSocket connection error. Check the server console or if the debug server is running on the correct port."
         wsStatus.value = "Error"
       }
 
       socket.onclose = () => {
-        console.log("WebSocket connection closed. Attempting to reconnect...")
         wsStatus.value = "Disconnected"
-        // 簡易的な再接続処理 (5秒後)
         setTimeout(connectWebSocket, 5000)
       }
     }
@@ -66,7 +60,7 @@ createApp({
     function deleteEntry(keyString) {
       const key = keyString.split(" : ")
       fetch("/api/kv-debug/delete-entry", {
-        method: "DELETE", // POSTからDELETEに変更
+        method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
@@ -78,12 +72,8 @@ createApp({
               throw new Error(err.error || "Failed to delete entry")
             })
           }
-          // 成功時はWebSocket経由で更新されるので、ここでは何もしない
-          // 必要であれば、ローカルのkvDataを即時更新することも可能
-          console.log("Delete request sent for key:", key)
         })
         .catch((err) => {
-          console.error("Error deleting entry:", err)
           error.value = err.message
         })
     }
@@ -98,10 +88,8 @@ createApp({
               throw new Error(err.error || "Failed to delete all entries")
             })
           }
-          console.log("All delete request sent")
         })
         .catch((err) => {
-          console.error("Error deleting all entries:", err)
           error.value = err.message
         })
     }
@@ -114,7 +102,7 @@ createApp({
       wsStatus,
       wsStatusColor,
       deleteEntry,
-      deleteAll, // 追加
+      deleteAll,
     }
   },
   template: `

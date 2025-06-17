@@ -27,7 +27,6 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
       .kv-key {
-        font-weight: bold;
         margin-bottom: 8px;
         color: #007bff;
         font-size: 1.1em;
@@ -45,19 +44,12 @@
         max-height: 300px; /* 値が長い場合にスクロールバーを表示 */
         overflow-y: auto;
       }
-      .error {
+      .error-message {
         color: #d9534f;
         border: 1px solid #d9534f;
         background-color: #f2dede;
         padding: 15px;
         border-radius: 5px;
-      }
-      .status {
-        margin-bottom: 15px;
-        padding: 12px;
-        background-color: #e9ecef;
-        border-radius: 5px;
-        border: 1px solid #ced4da;
       }
       h1 {
         color: #343a40;
@@ -78,17 +70,11 @@
   <body>
     <div id="app">
       <h1>KV Store Debug View</h1>
-      <div class="status">
-        <p>
-          WebSocket Status:
-          <span :style="{ color: wsStatusColor, fontWeight: 'bold' }">{{ wsStatus }}</span>
-        </p>
-      </div>
-      <div v-if="error" class="error">
+      <div v-if="error" class="error-message">
         <p><strong>Error:</strong> {{ error }}</p>
       </div>
       <div
-        v-if="kvData.length === 0 && !error && wsStatus === 'Connected'"
+        v-if="kvData.length === 0 && !error"
         class="kv-item"
       >
         <p>No data in KV store or waiting for data...</p>
