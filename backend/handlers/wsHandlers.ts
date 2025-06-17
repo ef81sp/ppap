@@ -6,6 +6,9 @@ type SocketWithToken = { socket: WebSocket; userToken: string | null }
 const roomSockets = new Map<string, Set<SocketWithToken>>()
 // --- ルームごとのwatcher起動管理 ---
 const roomWatchers = new Map<string, boolean>()
+// --- 切断時の退室タイマー管理 ---
+// denoのsetTimeout/clearTimeoutはnumber型
+const disconnectTimers = new Map<string, number>()
 
 export function handleWebSocket(
   request: Request,
@@ -26,6 +29,17 @@ export function handleWebSocket(
   const socketObj: SocketWithToken = { socket, userToken: null }
   roomSockets.get(roomId)!.add(socketObj)
 
+  // --- 再接続時の退室キャンセル ---
+  function cancelDisconnectTimer(userToken: string | null) {
+    if (!userToken) return
+    const key = `${roomId}:${userToken}`
+    const timer = disconnectTimers.get(key)
+    if (timer) {
+      clearTimeout(timer)
+      disconnectTimers.delete(key)
+    }
+  }
+
   socket.onopen = () => {
     console.log(`WebSocket connected for room: ${roomId}`)
     // ルームごとに一度だけwatcherを起動
@@ -33,9 +47,15 @@ export function handleWebSocket(
       startRoomWatcherForRoom(roomId, kv)
       roomWatchers.set(roomId, true)
     }
+    // 再接続時の退室キャンセル
+    cancelDisconnectTimer(socketObj.userToken)
   }
   socket.onmessage = async (event) => {
-    if (handleAuthMessage(socketObj, event.data)) return
+    if (handleAuthMessage(socketObj, event.data)) {
+      // 認証時（userToken受信時）にも退室キャンセル
+      cancelDisconnectTimer(socketObj.userToken)
+      return
+    }
     if (event.data === "ping") {
       socket.send("pong")
       return
@@ -106,6 +126,39 @@ export function handleWebSocket(
   socket.onclose = () => {
     roomSockets.get(roomId)?.delete(socketObj)
     console.log(`WebSocket closed for room: ${roomId}`)
+    // --- 2秒後に退室・トークン削除タイマー ---
+    if (socketObj.userToken) {
+      const key = `${roomId}:${socketObj.userToken}`
+      // 既存タイマーがあればクリア
+      const prev = disconnectTimers.get(key)
+      if (prev) clearTimeout(prev)
+      // 2秒後に退室処理
+      const timer = setTimeout(async () => {
+        // 退室処理
+        const roomRes = await kv.get<import("../type.ts").Room>(["rooms", roomId])
+        const room = roomRes.value
+        if (room) {
+          const idx = room.participants.findIndex((p) => p.token === socketObj.userToken)
+          if (idx !== -1) {
+            room.participants.splice(idx, 1)
+            room.updatedAt = Date.now()
+            await kv.atomic()
+              .set(["rooms", roomId], room)
+              .delete(["user_tokens", socketObj.userToken ?? ""])
+              .delete([`user_rooms:${socketObj.userToken ?? ""}`])
+              .commit()
+          }
+        } else {
+          // ルームがなければトークンだけ削除
+          await kv.atomic()
+            .delete(["user_tokens", socketObj.userToken ?? ""])
+            .delete([`user_rooms:${socketObj.userToken ?? ""}`])
+            .commit()
+        }
+        disconnectTimers.delete(key)
+      }, 2000)
+      disconnectTimers.set(key, timer as unknown as number)
+    }
   }
   socket.onerror = (e) => {
     console.error(`WebSocket error:`, e)

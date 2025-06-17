@@ -157,15 +157,6 @@ const isOpen = computed(() => {
   return answerable.length > 0 && answerable.every(p => p.answer !== '');
 });
 
-onMounted(() => {
-  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-    exit();
-  };
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  onBeforeUnmount(() => {
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-  });
-});
 </script>
 
 <template>
