@@ -81,9 +81,7 @@
       <div class="status">
         <p>
           WebSocket Status:
-          <span :style="{ color: wsStatusColor, fontWeight: 'bold' }"
-            >{{ wsStatus }}</span
-          >
+          <span :style="{ color: wsStatusColor, fontWeight: 'bold' }">{{ wsStatus }}</span>
         </p>
       </div>
       <div v-if="error" class="error">
@@ -103,8 +101,7 @@
         <div class="kv-key">
           {{ item.key }}
           <span style="font-weight: normal; font-size: 0.8em; color: #6c757d"
-            >(version: {{item.versionstamp}})</span
-          >
+          >(version: {{item.versionstamp}})</span>
         </div>
         <pre class="kv-value">{{ item.value }}</pre>
       </div>

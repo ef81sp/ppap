@@ -1,25 +1,25 @@
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
+import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router"
 
-import Index from '@/components/Index.vue';
+import Index from "@/components/Index.vue"
 
-import Room from '@/components/Room.vue';
+import Room from "@/components/Room.vue"
 
 const routes: RouteRecordRaw[] = [
   {
-    path: '/',
-    name: 'Home',
+    path: "/",
+    name: "Home",
     component: Index,
   },
   {
-    path: '/:roomId',
-    name: 'Room',
+    path: "/:roomId",
+    name: "Room",
     component: Room,
   },
-];
+]
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
-});
+})
 
-export default router;
+export default router

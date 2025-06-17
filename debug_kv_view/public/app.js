@@ -1,112 +1,112 @@
-const { createApp, ref, computed } = Vue;
+const { createApp, ref, computed } = Vue
 
 createApp({
   setup() {
-    const kvData = ref([]);
-    const error = ref(null);
-    const wsStatus = ref('Connecting...');
-    let socket = null;
+    const kvData = ref([])
+    const error = ref(null)
+    const wsStatus = ref("Connecting...")
+    let socket = null
 
     const wsStatusColor = computed(() => {
       switch (wsStatus.value) {
-        case 'Connected':
-          return 'green';
-        case 'Disconnected':
-          return 'red';
-        case 'Error':
-          return 'red';
+        case "Connected":
+          return "green"
+        case "Disconnected":
+          return "red"
+        case "Error":
+          return "red"
         default:
-          return 'orange';
+          return "orange"
       }
-    });
+    })
 
     function connectWebSocket() {
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${wsProtocol}//${window.location.host}/ws/kv-debug`;
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+      const wsUrl = `${wsProtocol}//${window.location.host}/ws/kv-debug`
 
-      socket = new WebSocket(wsUrl);
+      socket = new WebSocket(wsUrl)
 
       socket.onopen = () => {
-        console.log('WebSocket connection established');
-        wsStatus.value = 'Connected';
-        error.value = null;
-      };
+        console.log("WebSocket connection established")
+        wsStatus.value = "Connected"
+        error.value = null
+      }
 
-      socket.onmessage = event => {
+      socket.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data);
-          if (message.type === 'initial' || message.type === 'update') {
-            kvData.value = message.data;
-            error.value = null;
-          } else if (message.type === 'error') {
-            console.error('Server error:', message.message);
-            error.value = message.message;
+          const message = JSON.parse(event.data)
+          if (message.type === "initial" || message.type === "update") {
+            kvData.value = message.data
+            error.value = null
+          } else if (message.type === "error") {
+            console.error("Server error:", message.message)
+            error.value = message.message
           }
         } catch (e) {
-          console.error('Failed to parse WebSocket message:', e);
-          error.value = 'Received malformed data from server.';
+          console.error("Failed to parse WebSocket message:", e)
+          error.value = "Received malformed data from server."
         }
-      };
+      }
 
-      socket.onerror = err => {
-        console.error('WebSocket error:', err);
+      socket.onerror = (err) => {
+        console.error("WebSocket error:", err)
         error.value =
-          'WebSocket connection error. Check the server console or if the debug server is running on the correct port.';
-        wsStatus.value = 'Error';
-      };
+          "WebSocket connection error. Check the server console or if the debug server is running on the correct port."
+        wsStatus.value = "Error"
+      }
 
       socket.onclose = () => {
-        console.log('WebSocket connection closed. Attempting to reconnect...');
-        wsStatus.value = 'Disconnected';
+        console.log("WebSocket connection closed. Attempting to reconnect...")
+        wsStatus.value = "Disconnected"
         // 簡易的な再接続処理 (5秒後)
-        setTimeout(connectWebSocket, 5000);
-      };
+        setTimeout(connectWebSocket, 5000)
+      }
     }
 
     function deleteEntry(keyString) {
-      const key = keyString.split(' : ');
-      fetch('/api/kv-debug/delete-entry', {
-        method: 'DELETE', // POSTからDELETEに変更
+      const key = keyString.split(" : ")
+      fetch("/api/kv-debug/delete-entry", {
+        method: "DELETE", // POSTからDELETEに変更
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ key }),
       })
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
-            return response.json().then(err => {
-              throw new Error(err.error || 'Failed to delete entry');
-            });
+            return response.json().then((err) => {
+              throw new Error(err.error || "Failed to delete entry")
+            })
           }
           // 成功時はWebSocket経由で更新されるので、ここでは何もしない
           // 必要であれば、ローカルのkvDataを即時更新することも可能
-          console.log('Delete request sent for key:', key);
+          console.log("Delete request sent for key:", key)
         })
-        .catch(err => {
-          console.error('Error deleting entry:', err);
-          error.value = err.message;
-        });
+        .catch((err) => {
+          console.error("Error deleting entry:", err)
+          error.value = err.message
+        })
     }
 
     function deleteAll() {
-      fetch('/api/kv-debug/delete-all', {
-        method: 'POST',
+      fetch("/api/kv-debug/delete-all", {
+        method: "POST",
       })
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
-            return response.json().then(err => {
-              throw new Error(err.error || 'Failed to delete all entries');
-            });
+            return response.json().then((err) => {
+              throw new Error(err.error || "Failed to delete all entries")
+            })
           }
-          console.log('All delete request sent');
+          console.log("All delete request sent")
         })
-        .catch(err => {
-          console.error('Error deleting all entries:', err);
-          error.value = err.message;
-        });
+        .catch((err) => {
+          console.error("Error deleting all entries:", err)
+          error.value = err.message
+        })
     }
 
-    connectWebSocket();
+    connectWebSocket()
 
     return {
       kvData,
@@ -115,7 +115,7 @@ createApp({
       wsStatusColor,
       deleteEntry,
       deleteAll, // 追加
-    };
+    }
   },
   template: `
     <div class="container">
@@ -138,4 +138,4 @@ createApp({
       </ul>
     </div>
   `,
-}).mount('#app');
+}).mount("#app")
