@@ -73,10 +73,7 @@
       <div v-if="error" class="error-message">
         <p><strong>Error:</strong> {{ error }}</p>
       </div>
-      <div
-        v-if="kvData.length === 0 && !error"
-        class="kv-item"
-      >
+      <div v-if="kvData.length === 0 && !error" class="kv-item">
         <p>No data in KV store or waiting for data...</p>
       </div>
       <div
@@ -87,7 +84,8 @@
         <div class="kv-key">
           {{ item.key }}
           <span style="font-weight: normal; font-size: 0.8em; color: #6c757d"
-          >(version: {{item.versionstamp}})</span>
+            >(version: {{item.versionstamp}})</span
+          >
         </div>
         <pre class="kv-value">{{ item.value }}</pre>
       </div>
