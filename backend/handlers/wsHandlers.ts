@@ -97,8 +97,10 @@ export function handleWebSocket(
           await kv.atomic().set(['rooms', roomId], room).commit();
         }
       }
-    } catch (_e) {
-      console.error(_e);
+    } catch (_e: unknown) {
+      console.error(
+        (_e as WebSocketError)?.message || 'WebSocket message error'
+      );
     }
   };
   socket.onclose = () => {
