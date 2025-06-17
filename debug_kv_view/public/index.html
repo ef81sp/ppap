@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KV Store Debug View</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+        background-color: #f0f0f0;
+        color: #333;
+      }
+      #app {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        max-width: 1200px;
+        margin: auto;
+      }
+      .kv-item {
+        border: 1px solid #ccc;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .kv-key {
+        margin-bottom: 8px;
+        color: #007bff;
+        font-size: 1.1em;
+        word-break: break-all;
+      }
+      .kv-value {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        background-color: #f9f9f9;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #eee;
+        font-family: monospace;
+        font-size: 0.95em;
+        max-height: 300px; /* 値が長い場合にスクロールバーを表示 */
+        overflow-y: auto;
+      }
+      .error-message {
+        color: #d9534f;
+        border: 1px solid #d9534f;
+        background-color: #f2dede;
+        padding: 15px;
+        border-radius: 5px;
+      }
+      h1 {
+        color: #343a40;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+      }
+      .delete-button {
+        margin-bottom: 16px;
+        background: #d9534f;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>KV Store Debug View</h1>
+      <div v-if="error" class="error-message">
+        <p><strong>Error:</strong> {{ error }}</p>
+      </div>
+      <div v-if="kvData.length === 0 && !error" class="kv-item">
+        <p>No data in KV store or waiting for data...</p>
+      </div>
+      <div
+        v-for="item in kvData"
+        :key="item.versionstamp + item.key"
+        class="kv-item"
+      >
+        <div class="kv-key">
+          {{ item.key }}
+          <span style="font-weight: normal; font-size: 0.8em; color: #6c757d"
+          >(version: {{item.versionstamp}})</span>
+        </div>
+        <pre class="kv-value">{{ item.value }}</pre>
+      </div>
+      <button @click="deleteAll" class="delete-button">全データ削除</button>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>

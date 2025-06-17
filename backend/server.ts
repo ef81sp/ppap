@@ -1,70 +1,75 @@
-import { serveDir } from 'https://deno.land/std@0.209.0/http/file_server.ts';
-import { addSocket } from './store/index.ts';
-import { genMsgConnected } from '@/wsMsg/msgFromServer.ts';
-import { closeHandler, socketMessageHandler } from './socketMessageHandler.ts';
-import { cleanupOldKvRecords } from './kvCleanupJob.ts';
+import { serveDir } from "jsr:@std/http/file-server"
+import { handleKvDebugRequest } from "../debug_kv_view/kv_debug_handler.ts"
+import {
+  handleCreateRoom,
+  handleJoinRoom,
+  handleLeaveRoom,
+  handleRejoinRoom, // 追加
+} from "./handlers/roomHandlers.ts"
+import { handleWebSocket } from "./handlers/wsHandlers.ts"
 
-// KVモードで実行されている場合のみcronジョブを登録
-if (Deno.env.get('USE_KV_STORE') === 'true') {
-  console.log('KVモードで実行中: cronジョブを登録します');
-  // 2日に1回、古いKVレコードを削除するcronジョブをスケジュール
-  Deno.cron('clean up old records', '0 0 */2 * *', () => {
-    cleanupOldKvRecords();
-  });
-}
+const kv = await Deno.openKv()
 
-function handler(request: Request): Promise<Response> {
-  const { pathname } = new URL(request.url);
-  if (request.headers.get('upgrade') === 'websocket') {
-    const { socket, response } = Deno.upgradeWebSocket(request);
+async function handler(request: Request): Promise<Response> {
+  const { pathname } = new URL(request.url)
 
-    const userToken = crypto.randomUUID();
-    socket.onopen = async () => {
-      console.log(`CONNECTED: ${userToken}`);
-      await addSocket(userToken, socket);
-      socket.send(JSON.stringify(genMsgConnected(userToken)));
-    };
-
-    socket.onmessage = async event => {
-      if (event.data?.includes('ping')) {
-        socket.send('pong');
-      } else {
-        await socketMessageHandler(event, socket);
-      }
-    };
-
-    socket.onclose = async () => {
-      await closeHandler(userToken);
-    };
-    socket.onerror = async error => {
-      console.error('ERROR:', error);
-      await closeHandler(userToken);
-    };
-
-    return Promise.resolve(response);
+  // KV Debug Viewer (Development Only)
+  if (Deno.env.get("APP_ENV") === "development") {
+    const debugResponse = await handleKvDebugRequest(request)
+    if (debugResponse) {
+      return debugResponse
+    }
   }
 
+  if (request.method === "POST" && pathname === "/api/rooms") {
+    return handleCreateRoom(request, kv)
+  }
   if (
-    pathname === '/' ||
-    pathname.startsWith('/assets') ||
-    pathname.endsWith('.png')
+    request.method === "POST" &&
+    pathname.match(/^\/api\/rooms\/(.+)\/join$/)
   ) {
-    return serveDir(request, { fsRoot: './dist/' });
+    const roomId = pathname.match(/^\/api\/rooms\/(.+)\/join$/)?.[1] ?? ""
+    return handleJoinRoom(request, roomId, kv)
+  }
+  if (
+    request.method === "POST" &&
+    pathname.match(/^\/api\/rooms\/(.+)\/leave$/)
+  ) {
+    const roomId = pathname.match(/^\/api\/rooms\/(.+)\/leave$/)?.[1] ?? ""
+    return handleLeaveRoom(request, roomId, kv)
+  }
+  if (
+    request.method === "POST" &&
+    pathname.match(/^\/api\/rooms\/(.+)\/rejoin$/)
+  ) {
+    const roomId = pathname.match(/^\/api\/rooms\/(.+)\/rejoin$/)?.[1] ?? ""
+    return handleRejoinRoom(request, roomId, kv)
+  }
+  if (request.method === "GET" && pathname.match(/^\/ws\/rooms\/(.+)$/)) {
+    const roomId = pathname.match(/^\/ws\/rooms\/(.+)$/)?.[1] ?? ""
+    return handleWebSocket(request, roomId, kv)
+  }
+  if (
+    pathname === "/" ||
+    pathname.startsWith("/assets") ||
+    pathname.endsWith(".png")
+  ) {
+    return serveDir(request, { fsRoot: "./dist/" })
   }
   return Promise.resolve(
-    new Response('Not found', {
+    new Response("Not found", {
       status: 404,
-      statusText: 'Not found',
+      statusText: "Not found",
       headers: {
-        'content-type': 'text/plain',
+        "content-type": "text/plain",
       },
-    })
-  );
+    }),
+  )
 }
 
 Deno.serve(
   {
-    port: Number(Deno.env.get('PORT')) || 8000,
+    port: Number(Deno.env.get("PORT")) || 8000,
   },
-  handler
-);
+  handler,
+)

@@ -1,44 +1,23 @@
-import { RoomId, UserToken } from "@/backend/type.ts"
+import { RoomId } from "@/backend/type.ts"
 
 const msgType = {
-  createRoom: "createRoom",
-  isExistTheRoom: "isExistTheRoom",
-  enterTheRoom: "enterTheRoom",
   answer: "answer",
   clearAnswer: "clearAnswer",
+  setAudience: "setAudience",
 } as const
 
-type MsgFromClient =
-  | MsgCreateRoom
-  | MsgIsExistTheRoom
-  | MsgEnterTheRoom
-  | MsgAnswer
-  | MsgClearAnswer
+type MsgFromClient = MsgAnswer | MsgClearAnswer | MsgSetAudience
 
-type MsgCreateRoom = {
-  type: (typeof msgType)["createRoom"]
-  userToken: UserToken
-  userName: string
-}
-type MsgIsExistTheRoom = {
-  type: (typeof msgType)["isExistTheRoom"]
-  roomId: RoomId
-}
-type MsgEnterTheRoom = {
-  type: (typeof msgType)["enterTheRoom"]
-  userToken: UserToken
-  userName: string
-  roomId: RoomId
-}
 type MsgAnswer = {
   type: (typeof msgType)["answer"]
-  userToken: UserToken
-  roomId: RoomId
   answer: string
 }
 type MsgClearAnswer = {
   type: (typeof msgType)["clearAnswer"]
-  roomId: RoomId
+}
+type MsgSetAudience = {
+  type: (typeof msgType)["setAudience"]
+  isAudience: boolean
 }
 
 export const isMsgFromClient = (data: unknown): data is MsgFromClient => {
@@ -47,51 +26,31 @@ export const isMsgFromClient = (data: unknown): data is MsgFromClient => {
   if (
     !(
       "type" in data &&
-      typeof data.type === "string" &&
-      Object.values(msgType).some((v) => v === data.type)
+      typeof (data as any).type === "string" &&
+      Object.values(msgType).some((v) => v === (data as any).type)
     )
   ) {
     return false
   }
-
+  if (
+    (data as any).type === "answer" &&
+    typeof (data as any).answer !== "string"
+  ) {
+    return false
+  }
   return true
 }
 
 // =====================
 
-export const genMsgCreateRoom = (
-  userToken: UserToken,
-  userName: string,
-): MsgFromClient => ({
-  type: "createRoom",
-  userToken,
-  userName,
-})
-export const genMsgIsExistTheRoom = (roomId: RoomId): MsgIsExistTheRoom => ({
-  type: "isExistTheRoom",
-  roomId,
-})
-export const genMsgEnterTheRoom = ({
-  userToken,
-  userName,
-  roomId,
-}: Omit<MsgEnterTheRoom, "type">): MsgEnterTheRoom => ({
-  type: "enterTheRoom",
-  userToken,
-  userName,
-  roomId,
-})
-export const genMsgAnswer = ({
-  userToken,
-  roomId,
-  answer,
-}: Omit<MsgAnswer, "type">): MsgAnswer => ({
+export const genMsgAnswer = (answer: string): MsgAnswer => ({
   type: "answer",
-  userToken,
-  roomId,
   answer,
 })
-export const genMsgClearAnswer = (roomId: RoomId): MsgClearAnswer => ({
+export const genMsgClearAnswer = (): MsgClearAnswer => ({
   type: "clearAnswer",
-  roomId,
+})
+export const genMsgSetAudience = (isAudience: boolean): MsgSetAudience => ({
+  type: "setAudience",
+  isAudience,
 })

@@ -1,92 +1,162 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from "vue"
-import { room, setName, user } from "@/src/composables/store"
-import { useRoute } from "vue-router"
-
-import InputName from "./InputName.vue"
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import {
-  sendAnswer,
-  sendEnterTheRoom,
-  sendClearAnswer,
-} from "../composables/webSocket"
-import RoomParticipant from "./RoomParticipant.vue"
-import RoomAnswerButton from "./RoomAnswerButton.vue"
-import VButton from "./VButton.vue"
+  room,
+  setName,
+  user,
+  setRoom,
+  setToken,
+  clearStore,
+} from '../composables/store'; // src/ を削除
+import { useRoute, useRouter } from 'vue-router';
 
-const route = useRoute()
+import InputName from './InputName.vue';
+import RoomParticipant from './RoomParticipant.vue';
+import RoomAnswerButton from './RoomAnswerButton.vue';
+import VButton from './VButton.vue';
+import { joinRoomApi, rejoinRoomApi } from '../fetchApi';
+import { useRoomWebSocket } from '../composables/webSocket';
+import {
+  genMsgAnswer,
+  genMsgSetAudience,
+  genMsgClearAnswer,
+} from '../../wsMsg/msgFromClient';
+
+const route = useRoute();
+const router = useRouter();
 
 const step = computed(() => {
-  if (user.name.value === "") {
-    return "name register"
+  if (user.name.value === '') {
+    return 'name register';
   }
-  return "inside room"
-})
+  return 'inside room';
+});
+
+const enterTheRoom = async (userName: string) => {
+  const roomId = route.params.roomId;
+  if (typeof roomId !== 'string') return;
+  setName(userName);
+  try {
+    const res = await joinRoomApi(roomId, { userName });
+    setRoom(res.room);
+    user.token.value = res.userToken;
+    sessionStorage.setItem('roomId', roomId);
+    sessionStorage.setItem('userName', userName);
+    sessionStorage.setItem('userToken', res.userToken);
+  } catch (e) {
+    alert('ルーム参加に失敗しました');
+    return;
+  }
+};
+
+const tryRejoinRoom = async () => {
+  const roomId = route.params.roomId;
+  const userToken = sessionStorage.getItem('userToken');
+  if (typeof roomId !== 'string' || !userToken) return false;
+  try {
+    const res = await rejoinRoomApi(roomId, { userToken });
+    setRoom(res.room);
+    setName(res.userName);
+    setToken(res.userToken);
+    sessionStorage.setItem('roomId', roomId);
+    sessionStorage.setItem('userToken', res.userToken);
+    sessionStorage.setItem('userName', res.userName);
+    return true;
+  } catch (e) {
+    // 404など
+    sessionStorage.clear();
+    router.push('/');
+    return false;
+  }
+};
+
+// ページロード時にrejoinを試みる
+tryRejoinRoom();
+
+const url = window.location.toString();
+const copyUrl = () => {
+  navigator.clipboard.writeText(url);
+};
+
+const answerOptions = ['1', '2', '3', '5', '8', '13', '21'];
+const selectingAnswer = computed<string>(() => {
+  if (!room.value) return '';
+  const me = room.value.participants.find(p => p.isMe);
+  return me ? me.answer : '';
+});
+
+const sendAnswer = (answer: string) => {
+  if (!ws.value) return;
+  ws.value.send(JSON.stringify(genMsgAnswer(answer)));
+};
+
+const sendClearAnswer = () => {
+  if (!ws.value) return;
+  ws.value.send(JSON.stringify(genMsgClearAnswer()));
+};
+
+const exit = async () => {
+  const roomId = route.params.roomId;
+  const userToken = sessionStorage.getItem('userToken');
+  if (typeof roomId === 'string' && userToken) {
+    try {
+      const res = await fetch(`/api/rooms/${roomId}/leave`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userToken }),
+      });
+      if (!res.ok) {
+        // エラー時はそのままクリアして遷移
+        console.error('退室APIエラー', await res.text());
+      }
+    } catch (e) {
+      console.error('退室API通信エラー', e);
+    }
+  }
+  ws.value?.close(); // ここでWebSocket切断
+  sessionStorage.clear();
+  clearStore(); // ストアもクリア
+  router.push('/');
+};
+
+const ws = ref<ReturnType<typeof useRoomWebSocket> | null>(null);
+
+// 自分のisAudience状態を取得
+const isAudience = computed({
+  get() {
+    if (!room.value) return false;
+    const me = room.value.participants.find(p => p.isMe);
+    return me ? me.isAudience : false;
+  },
+  set(val: boolean) {
+    if (!ws.value) return;
+    ws.value.send(JSON.stringify(genMsgSetAudience(val)));
+  },
+});
 
 watch(
-  user.token,
-  (token) => {
-    if (token === "") return
-    // トークン取得後、セッションストレージに名前が残っていたら、その名前で入室する(再入室)
-    const roomId = route.params.roomId
-    if (typeof roomId !== "string") return
-    const userName = sessionStorage.getItem("userName")
-    if (userName) {
-      enterTheRoom(userName)
+  () => room.value?.id,
+  roomId => {
+    if (roomId) {
+      ws.value = useRoomWebSocket(roomId);
+      ws.value.open(); // ルーム入室時にWebSocket接続
+    } else {
+      ws.value?.close();
+      ws.value = null;
     }
   },
-  { once: true }
-)
+  { immediate: true }
+);
 
-// 無理やりでやばい。WebSocketのメッセージを追加して、participantにisAudienceステータスをもたせるべきだ。
-const isAudience = ref(false)
-watchEffect(() => {
-  if (
-    isAudience.value &&
-    room.value.participants.find((p) => p.isMe)?.answer === ""
-  ) {
-    sendAnswer("-1")
-  }
-})
-watch(isAudience, (newValue, oldValue) => {
-  sessionStorage.setItem("isAudience", newValue.toString())
-  if (newValue === true && oldValue === false) {
-    sendAnswer("-1")
-    return
-  }
-  if (newValue === false && oldValue === true) {
-    sendAnswer("")
-    return
-  }
-})
+// --- 全員回答済みなら自動で公開（computedで管理） ---
+const isOpen = computed(() => {
+  if (!room.value) return false;
+  const participants = room.value.participants;
+  // 観戦者（isAudience）を除外
+  const answerable = participants.filter(p => !p.isAudience);
+  return answerable.length > 0 && answerable.every(p => p.answer !== '');
+});
 
-const enterTheRoom = (userName: string) => {
-  const roomId = route.params.roomId
-  if (typeof roomId !== "string") return
-  setName(userName)
-  sendEnterTheRoom(roomId, userName)
-  sessionStorage.setItem("roomId", roomId)
-  sessionStorage.setItem("userName", user.name.value)
-
-  const _isAudience = sessionStorage.getItem("isAudience")
-  if (_isAudience === "true") {
-    isAudience.value = true
-  }
-}
-
-const url = window.location.toString()
-const copyUrl = () => {
-  navigator.clipboard.writeText(url)
-}
-
-const answerOptions = ["1", "2", "3", "5", "8", "13", "21"]
-const selectingAnswer = computed<string>(
-  () => room.value.participants.find((p) => p.isMe)?.answer || ""
-)
-
-const exit = () => {
-  sessionStorage.clear()
-  window.location.href = "/"
-}
 </script>
 
 <template>
@@ -102,10 +172,10 @@ const exit = () => {
     </section>
     <section class="flex justify-center flex-wrap items-center mt-8 gap-y-4">
       <RoomParticipant
-        v-for="p in room.participants"
+        v-for="p in room && room.participants"
         :key="p.userNumber"
         :participant="p"
-        :is-open="room.isOpen"
+        :is-open="isOpen"
       />
     </section>
     <section class="mt-8">
