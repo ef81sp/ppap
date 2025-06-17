@@ -75,19 +75,38 @@ export async function deleteUserToken(
 
 export async function leaveRoom(
   kv: Deno.Kv,
-  room: Room,
-  roomId: RoomId,
-  userToken: UserToken,
+  options: {
+    room?: Room
+    roomId?: RoomId
+    userToken: UserToken
+  },
 ): Promise<{ ok: boolean; error?: string }> {
+  let { room, roomId, userToken } = options as { room: Room | null | undefined, roomId: RoomId | undefined, userToken: UserToken };
+  // room, roomIdがなければuserTokenから取得
+  if (!room || !roomId) {
+    const userTokenInfo = await getUserToken(kv, userToken)
+    if (!userTokenInfo || !userTokenInfo.currentRoomId) {
+      return { ok: false, error: "Room or roomId not found for userToken" }
+    }
+    roomId = userTokenInfo.currentRoomId
+    room = await getRoom(kv, roomId)
+    if (!room) {
+      return { ok: false, error: "Room not found" }
+    }
+  }
+  // 指定ユーザーを除外したroomを作成
+  const idx = room.participants.findIndex((p) => p.token === userToken)
+  if (idx !== -1) {
+    room.participants.splice(idx, 1)
+    room.updatedAt = Date.now()
+  }
   const atomic = kv.atomic()
   if (room.participants.length === 0) {
-    // 参加者が0人ならroom自体も削除
     atomic.delete(roomKey(roomId))
   } else {
     atomic.set(roomKey(roomId), room)
   }
   atomic.delete(userTokenKey(userToken))
-  atomic.delete([`user_rooms:${userToken}`])
   const result = await atomic.commit()
   if (!result.ok) {
     return { ok: false, error: "Failed to update room or delete user token" }

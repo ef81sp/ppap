@@ -134,26 +134,11 @@ export function handleWebSocket(
       if (prev) clearTimeout(prev)
       // 2秒後に退室処理
       const timer = setTimeout(async () => {
-        // 退室処理
-        const roomRes = await kv.get<import("../type.ts").Room>(["rooms", roomId])
-        const room = roomRes.value
-        if (room) {
-          const idx = room.participants.findIndex((p) => p.token === socketObj.userToken)
-          if (idx !== -1) {
-            room.participants.splice(idx, 1)
-            room.updatedAt = Date.now()
-            await kv.atomic()
-              .set(["rooms", roomId], room)
-              .delete(["user_tokens", socketObj.userToken ?? ""])
-              .delete([`user_rooms:${socketObj.userToken ?? ""}`])
-              .commit()
-          }
-        } else {
-          // ルームがなければトークンだけ削除
-          await kv.atomic()
-            .delete(["user_tokens", socketObj.userToken ?? ""])
-            .delete([`user_rooms:${socketObj.userToken ?? ""}`])
-            .commit()
+        // leaveRoom関数を新しい呼び出し方で利用
+        if (socketObj.userToken) {
+          await import("../kv.ts").then(async kvmod => {
+            await kvmod.leaveRoom(kv, { roomId, userToken: socketObj.userToken! })
+          })
         }
         disconnectTimers.delete(key)
       }, 2000)

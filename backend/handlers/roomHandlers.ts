@@ -173,32 +173,19 @@ export async function handleLeaveRoom(
       status: 400,
     })
   }
-  const roomRes = await kv.get<Room>(roomKey(roomId))
-  const room = roomRes.value
-  if (!room) {
-    return new Response(JSON.stringify({ error: "Room not found" }), {
-      status: 404,
+  // leaveRoomの新しい呼び出し方に対応
+  const result = await leaveRoom(kv, { roomId, userToken: body.userToken })
+  if (!result.ok) {
+    return new Response(JSON.stringify({ error: result.error }), {
+      status: 500,
     })
-  }
-  const idx = room.participants.findIndex((p) => p.token === body.userToken)
-  if (idx !== -1) {
-    room.participants.splice(idx, 1)
-    room.updatedAt = Date.now()
-    const result = await leaveRoom(kv, room, roomId, body.userToken)
-    if (!result.ok) {
-      return new Response(JSON.stringify({ error: result.error }), {
-        status: 500,
-      })
-    }
-  } else {
-    const atomic = kv.atomic()
-    atomic.delete(userTokenKey(body.userToken))
-    atomic.delete([`user_rooms:${body.userToken}`])
-    await atomic.commit()
   }
   return new Response(
     JSON.stringify({ message: "Successfully left the room" }),
-    { status: 200, headers: { "content-type": "application/json" } },
+    {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    },
   )
 }
 
