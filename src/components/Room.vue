@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import {
   room,
   setName,
@@ -155,6 +155,16 @@ const isOpen = computed(() => {
   // 観戦者（isAudience）を除外
   const answerable = participants.filter(p => !p.isAudience);
   return answerable.length > 0 && answerable.every(p => p.answer !== '');
+});
+
+onMounted(() => {
+  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    exit();
+  };
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  onBeforeUnmount(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+  });
 });
 </script>
 
