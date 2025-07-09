@@ -59,7 +59,11 @@ const cardClass = computed(() => {
 }
 
 /* 回答一致時の特別なアニメーション */
-.card-match-enter-active,
+.card-match-enter-active {
+  transition: transform 0.5s linear;
+  animation: matchReveal 0.3s ease;
+}
+
 .card-match-leave-active {
   transition: transform 0.5s linear;
 }
@@ -67,10 +71,6 @@ const cardClass = computed(() => {
 .card-match-enter-from,
 .card-match-leave-to {
   transform: rotateY(calc(90deg * 6));
-}
-
-.card-match-enter-active {
-  animation: matchReveal 0.3s ease;
 }
 
 @keyframes matchReveal {
