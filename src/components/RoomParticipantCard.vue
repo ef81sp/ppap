@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed } from 'vue';
 import backUrl from '@/assets/trading_card08_back_red.png';
 
 const props = defineProps<{
