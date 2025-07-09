@@ -66,7 +66,7 @@ const cardClass = computed(() => {
 
 .card-match-enter-from,
 .card-match-leave-to {
-  transform: rotateY(540deg); /* 5倍多く回転 (90deg × 6 = 540deg) */
+  transform: rotateY(calc(90deg * 6));
 }
 
 .card-match-enter-active {
@@ -74,9 +74,6 @@ const cardClass = computed(() => {
 }
 
 @keyframes matchReveal {
-  /* 0% {
-    transform: rotateY(450deg) scale(1);
-  } */
   0% {
     transform: rotateY(0deg) scale(1);
   }
