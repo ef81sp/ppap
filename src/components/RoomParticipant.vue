@@ -6,6 +6,7 @@ import RoomParticipantCard from './RoomParticipantCard.vue';
 const props = defineProps<{
   participant: RoomForClient['participants'][number];
   isOpen: boolean;
+  allAnswersMatch?: boolean;
 }>();
 const answer = computed(() => {
   if (props.participant.isAudience) return '';
@@ -23,6 +24,11 @@ const answer = computed(() => {
     >
       <p class="rotate-[54deg] text-base text-center">Audience</p>
     </div>
-    <RoomParticipantCard v-else :answer="answer" :is-open="props.isOpen" />
+    <RoomParticipantCard
+      v-else
+      :answer="answer"
+      :is-open="props.isOpen"
+      :all-answers-match="props.allAnswersMatch || false"
+    />
   </article>
 </template>

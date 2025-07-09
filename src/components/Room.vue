@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { computed, ref, watch, onUnmounted } from 'vue';
 import {
   room,
   setName,
@@ -148,8 +148,9 @@ watch(
   { immediate: true }
 );
 
-// --- 全員回答済みなら自動で公開（computedで管理） ---
-const isOpen = computed(() => {
+// --- 全員回答済みなら自動で公開（ちょっと遅延させて裏面を見せてからめくる） ---
+const isOpen = ref(false);
+const shouldBeOpen = computed(() => {
   if (!room.value) return false;
   const participants = room.value.participants;
   // 観戦者（isAudience）を除外
@@ -157,6 +158,40 @@ const isOpen = computed(() => {
   return answerable.length > 0 && answerable.every(p => p.answer !== '');
 });
 
+let isOpenTimeout: ReturnType<typeof setTimeout> | null = null;
+watch(shouldBeOpen, newValue => {
+  if (isOpenTimeout) {
+    clearTimeout(isOpenTimeout);
+  }
+
+  if (newValue) {
+    isOpenTimeout = setTimeout(() => {
+      isOpen.value = true;
+    }, 600);
+  } else {
+    isOpen.value = false;
+  }
+});
+
+// --- audience以外のメンバーの回答がすべて一致しているかを判定 ---
+const allAnswersMatch = computed(() => {
+  if (!room.value || !isOpen.value) return false;
+  const participants = room.value.participants;
+  // 観戦者（isAudience）を除外し、回答がある参加者のみを取得
+  const answerable = participants.filter(p => !p.isAudience && p.answer !== '');
+  if (answerable.length < 2) return false; // 2人未満なら一致の概念がない
+
+  const firstAnswer = answerable[0].answer;
+  return answerable.every(p => p.answer === firstAnswer);
+});
+
+// コンポーネントアンマウント時にタイムアウトをクリア
+onUnmounted(() => {
+  if (isOpenTimeout) {
+    clearTimeout(isOpenTimeout);
+    isOpenTimeout = null;
+  }
+});
 </script>
 
 <template>
@@ -176,6 +211,7 @@ const isOpen = computed(() => {
         :key="p.userNumber"
         :participant="p"
         :is-open="isOpen"
+        :all-answers-match="allAnswersMatch"
       />
     </section>
     <section class="mt-8">
