@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount, onUnmounted } from 'vue';
 import {
   room,
   setName,
@@ -183,6 +183,14 @@ const allAnswersMatch = computed(() => {
 
   const firstAnswer = answerable[0].answer;
   return answerable.every(p => p.answer === firstAnswer);
+});
+
+// コンポーネントアンマウント時にタイムアウトをクリア
+onUnmounted(() => {
+  if (isOpenTimeout) {
+    clearTimeout(isOpenTimeout);
+    isOpenTimeout = null;
+  }
 });
 </script>
 
