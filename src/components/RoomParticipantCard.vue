@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch, nextTick } from 'vue';
 import backUrl from '@/assets/trading_card08_back_red.png';
 
 const props = defineProps<{
   answer: string;
   isOpen: boolean;
+  allAnswersMatch: boolean;
 }>();
 const answer = computed(() => {
   if (props.answer === '') return '';
@@ -31,7 +32,10 @@ const cardClass = computed(() => {
 </script>
 
 <template>
-  <Transition mode="out-in">
+  <Transition
+    mode="out-in"
+    :name="props.allAnswersMatch ? 'card-match' : 'card'"
+  >
     <div :class="cardClass" v-if="status === 'reverse'">
       <img :src="backUrl" />
     </div>
@@ -43,13 +47,44 @@ const cardClass = computed(() => {
 </template>
 
 <style scoped>
-.v-enter-active,
-.v-leave-active {
-  @apply transition-transform;
+/* 通常のアニメーション */
+.card-enter-active,
+.card-leave-active {
+  transition: transform 0.3s ease;
 }
 
-.v-enter-from,
-.v-leave-to {
+.card-enter-from,
+.card-leave-to {
   transform: rotateY(90deg);
+}
+
+/* 回答一致時の特別なアニメーション */
+.card-match-enter-active,
+.card-match-leave-active {
+  transition: transform 0.5s linear;
+}
+
+.card-match-enter-from,
+.card-match-leave-to {
+  transform: rotateY(540deg); /* 5倍多く回転 (90deg × 6 = 540deg) */
+}
+
+.card-match-enter-active {
+  animation: matchReveal 0.3s ease;
+}
+
+@keyframes matchReveal {
+  /* 0% {
+    transform: rotateY(450deg) scale(1);
+  } */
+  0% {
+    transform: rotateY(0deg) scale(1);
+  }
+  70% {
+    transform: rotateY(0deg) scale(1.15); /* 少し大きくなる */
+  }
+  100% {
+    transform: rotateY(0deg) scale(1); /* 元のサイズに戻る */
+  }
 }
 </style>
