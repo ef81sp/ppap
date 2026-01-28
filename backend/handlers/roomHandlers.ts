@@ -2,6 +2,10 @@ import { Room, UserTokenInfo } from "../type.ts"
 import { CreateRoomRequest, CreateRoomResponse, RoomForClient } from "../type.ts"
 import { CreateRoomRequestSchema, JoinRoomRequestSchema } from "../validate.ts"
 import { createRoom, createUserToken, leaveRoom, roomKey, userTokenKey } from "../kv.ts"
+import { JsonParseError, parseJsonBody } from "../utils/parseJsonBody.ts"
+
+const invalidJsonResponse = () =>
+  new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400 })
 
 export function toRoomForClient(room: Room, userToken: string): RoomForClient {
   return {
@@ -25,11 +29,10 @@ export async function handleCreateRoom(
 ): Promise<Response> {
   let body: CreateRoomRequest
   try {
-    body = await req.json()
-  } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-      status: 400,
-    })
+    body = await parseJsonBody<CreateRoomRequest>(req)
+  } catch (e) {
+    if (e instanceof JsonParseError) return invalidJsonResponse()
+    throw e
   }
   const parse = CreateRoomRequestSchema.safeParse(body)
   if (!parse.success) {
@@ -89,11 +92,10 @@ export async function handleJoinRoom(
 ): Promise<Response> {
   let body: unknown
   try {
-    body = await req.json()
-  } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-      status: 400,
-    })
+    body = await parseJsonBody<unknown>(req)
+  } catch (e) {
+    if (e instanceof JsonParseError) return invalidJsonResponse()
+    throw e
   }
   const parse = JoinRoomRequestSchema.safeParse(body)
   if (!parse.success) {
@@ -164,11 +166,10 @@ export async function handleLeaveRoom(
 ): Promise<Response> {
   let body: { userToken: string }
   try {
-    body = await req.json()
-  } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-      status: 400,
-    })
+    body = await parseJsonBody<{ userToken: string }>(req)
+  } catch (e) {
+    if (e instanceof JsonParseError) return invalidJsonResponse()
+    throw e
   }
   if (!body.userToken || typeof body.userToken !== "string") {
     return new Response(JSON.stringify({ error: "Validation error" }), {
@@ -198,11 +199,10 @@ export async function handleRejoinRoom(
 ): Promise<Response> {
   let body: { userToken: string }
   try {
-    body = await req.json()
-  } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-      status: 400,
-    })
+    body = await parseJsonBody<{ userToken: string }>(req)
+  } catch (e) {
+    if (e instanceof JsonParseError) return invalidJsonResponse()
+    throw e
   }
   const userToken = body.userToken
   if (!userToken || typeof userToken !== "string") {
