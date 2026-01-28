@@ -1,12 +1,14 @@
 import {
   createRoom,
   createUserToken,
+  createUserTokenWithTTL,
   deleteRoom,
   deleteUserToken,
   getRoom,
   getUserToken,
   updateRoom,
   updateUserToken,
+  DEFAULT_TOKEN_TTL_MS,
 } from "./kv.ts"
 import { Room, UserTokenInfo } from "./type.ts"
 
@@ -58,6 +60,44 @@ Deno.test("UserToken CRUD", async () => {
     await deleteUserToken(kv, info.token)
     const deleted = await getUserToken(kv, info.token)
     if (deleted) throw new Error("UserToken delete failed")
+  } finally {
+    kv.close()
+  }
+})
+
+Deno.test("UserToken TTL", async (t) => {
+  const kv = await Deno.openKv()
+  try {
+    await t.step("DEFAULT_TOKEN_TTL_MSが24時間である", () => {
+      const expectedMs = 24 * 60 * 60 * 1000 // 24時間
+      if (DEFAULT_TOKEN_TTL_MS !== expectedMs) {
+        throw new Error(`Expected ${expectedMs}ms but got ${DEFAULT_TOKEN_TTL_MS}ms`)
+      }
+    })
+
+    await t.step("createUserTokenWithTTLでTTL付きトークンが作成できる", async () => {
+      const info: UserTokenInfo = {
+        token: "ttl-test-token-" + Date.now(),
+        currentRoomId: "testroom",
+        name: "TTLテスト",
+        isSpectator: false,
+        lastAccessedAt: Date.now(),
+      }
+      // TTL付きで作成してもエラーにならない
+      await createUserTokenWithTTL(kv, info, 60000)
+
+      // 作成直後は取得できる
+      const loaded = await getUserToken(kv, info.token)
+      if (!loaded) {
+        throw new Error("Token should exist after creation")
+      }
+      if (loaded.name !== "TTLテスト") {
+        throw new Error("Token data should match")
+      }
+
+      // クリーンアップ
+      await deleteUserToken(kv, info.token)
+    })
   } finally {
     kv.close()
   }

@@ -2,12 +2,16 @@ import { Room } from "../type.ts"
 import { toRoomForClient } from "./roomHandlers.ts"
 import { DisconnectTimerManager } from "../utils/disconnectTimer.ts"
 import { updateParticipant, updateAllParticipants } from "../utils/updateParticipant.ts"
+import { cleanupEmptyRoom } from "../utils/roomCleanup.ts"
+import { WatcherManager } from "../utils/watcherManager.ts"
 
 // --- ルームごとのWebSocket接続管理 ---
 type SocketWithToken = { socket: WebSocket; userToken: string | null }
 const roomSockets = new Map<string, Set<SocketWithToken>>()
 // --- ルームごとのwatcher起動管理 ---
 const roomWatchers = new Map<string, boolean>()
+// --- watcher停止管理 ---
+const watcherManager = new WatcherManager()
 // --- 切断時の退室タイマー管理 ---
 const disconnectTimers = new DisconnectTimerManager()
 
@@ -87,6 +91,10 @@ export function handleWebSocket(
   socket.onclose = () => {
     roomSockets.get(roomId)?.delete(socketObj)
     console.log(`WebSocket closed for room: ${roomId}`)
+    // --- 空ルームのクリーンアップとwatcher停止 ---
+    if (cleanupEmptyRoom(roomId, roomSockets, roomWatchers)) {
+      watcherManager.stop(roomId)
+    }
     // --- 2秒後に退室・トークン削除タイマー ---
     if (socketObj.userToken) {
       const userToken = socketObj.userToken
@@ -121,9 +129,15 @@ export function handleAuthMessage(
 
 // --- ルームごとに個別にwatcherを起動 ---
 function startRoomWatcherForRoom(roomId: string, kv: Deno.Kv) {
+  const controller = new AbortController()
+  watcherManager.register(roomId, controller)
   ;(async () => {
     const iter = kv.watch([["rooms", roomId]])
     for await (const entries of iter) {
+      // AbortControllerで停止されたらループを抜ける
+      if (controller.signal.aborted) {
+        break
+      }
       for (const entry of entries) {
         const key = entry.key
         const value = entry.value
@@ -187,4 +201,4 @@ export async function startRoomWatcherForRoomOnce(roomId: string, kv: Deno.Kv) {
 }
 
 // --- テスト用にエクスポート ---
-export { roomSockets, startRoomWatcherForRoom }
+export { roomSockets, roomWatchers, watcherManager, startRoomWatcherForRoom }
