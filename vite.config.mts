@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite"
 import vue from "@vitejs/plugin-vue"
 import { dirname, fromFileUrl, join } from "https://deno.land/std@0.209.0/path/mod.ts"
@@ -15,5 +16,10 @@ export default defineConfig({
     alias: {
       "@/": join(dirname(fromFileUrl(import.meta.url)), "./src/"), // ./src/ に修正
     },
+  },
+  test: {
+    globals: true,
+    environment: "happy-dom",
+    include: ["src/**/*.test.ts", "wsMsg/**/*.test.ts"],
   },
 })
