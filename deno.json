@@ -12,7 +12,8 @@
     "test": "deno test --allow-net --allow-read --allow-write --allow-env --unstable-kv backend/",
     "test:coverage": "deno test --coverage=./coverage --allow-write --unstable-kv backend/",
     "test:frontend": "deno run -A --node-modules-dir npm:vitest run",
-    "test:all": "deno task test && deno task test:frontend"
+    "test:all": "deno task test && deno task test:frontend",
+    "test:e2e": "deno test --allow-all --unstable-kv e2e/"
   },
   "imports": {
     "vue": "npm:vue@^3.5.13",
@@ -56,7 +57,7 @@
     "exclude": [".vite/", "dist", "node_modules"]
   },
   "test": {
-    "exclude": [".vite/", "dist", "node_modules", "src/", "wsMsg/", "e2e/"]
+    "exclude": [".vite/", "dist", "node_modules", "src/", "wsMsg/"]
   },
   "unstable": ["kv"]
 }

@@ -4,9 +4,10 @@ import {
   handleCreateRoom,
   handleJoinRoom,
   handleLeaveRoom,
-  handleRejoinRoom, // 追加
+  handleRejoinRoom,
 } from "./handlers/roomHandlers.ts"
 import { handleWebSocket } from "./handlers/wsHandlers.ts"
+import { csrfMiddleware, validateWebSocketOrigin } from "./middleware/csrf.ts"
 
 const kv = await Deno.openKv()
 
@@ -18,6 +19,14 @@ async function handler(request: Request): Promise<Response> {
     const debugResponse = await handleKvDebugRequest(request)
     if (debugResponse) {
       return debugResponse
+    }
+  }
+
+  // CSRF対策: API/WebSocketリクエストのOrigin検証
+  if (pathname.startsWith("/api/")) {
+    const csrfResponse = await csrfMiddleware(request)
+    if (csrfResponse) {
+      return csrfResponse
     }
   }
 
@@ -46,6 +55,13 @@ async function handler(request: Request): Promise<Response> {
     return handleRejoinRoom(request, roomId, kv)
   }
   if (request.method === "GET" && pathname.match(/^\/ws\/rooms\/(.+)$/)) {
+    // WebSocket接続時のOrigin検証
+    if (!validateWebSocketOrigin(request)) {
+      return new Response(JSON.stringify({ error: "Invalid origin" }), {
+        status: 403,
+        headers: { "content-type": "application/json" },
+      })
+    }
     const roomId = pathname.match(/^\/ws\/rooms\/(.+)$/)?.[1] ?? ""
     return handleWebSocket(request, roomId, kv)
   }

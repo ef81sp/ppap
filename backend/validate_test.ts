@@ -133,3 +133,47 @@ Deno.test("JoinRoomRequestSchema: XSS文字がサニタイズされる", () => {
   const result = JoinRoomRequestSchema.parse({ userName: '"><script>' })
   assertEquals(result.userName, "script")
 })
+
+// sanitize() 追加エッジケーステスト
+Deno.test("sanitize: 複合XSS攻撃パターン", () => {
+  // イベントハンドラ付きタグ
+  assertEquals(
+    sanitize('<img src="x" onerror="alert(1)">'),
+    "img src=x onerror=alert(1)",
+  )
+  // ネストされたスクリプト
+  assertEquals(
+    sanitize('<script><script>alert("xss")</script></script>'),
+    "scriptscriptalert(xss)/script/script",
+  )
+  // JavaScript URL
+  assertEquals(
+    sanitize('<a href="javascript:alert(1)">click</a>'),
+    "a href=javascript:alert(1)click/a",
+  )
+  // SVGベースのXSS
+  assertEquals(
+    sanitize('<svg onload="alert(1)">'),
+    "svg onload=alert(1)",
+  )
+  // Data URL
+  assertEquals(
+    sanitize('<a href="data:text/html,<script>alert(1)</script>">'),
+    "a href=data:text/html,scriptalert(1)/script",
+  )
+})
+
+Deno.test("sanitize: 長い文字列の処理", () => {
+  // 1000文字の通常テキスト
+  const longText = "a".repeat(1000)
+  assertEquals(sanitize(longText), longText)
+  // 1000文字のXSS含む文字列
+  const longXss = "<script>".repeat(100) + "payload" + "</script>".repeat(100)
+  const expected = "script".repeat(100) + "payload" + "/script".repeat(100)
+  assertEquals(sanitize(longXss), expected)
+})
+
+Deno.test("sanitize: 特殊なユニコード文字の保持", () => {
+  assertEquals(sanitize("👍🎉✨"), "👍🎉✨")
+  assertEquals(sanitize("émojis café"), "émojis café")
+})

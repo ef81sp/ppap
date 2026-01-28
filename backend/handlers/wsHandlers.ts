@@ -165,7 +165,9 @@ export function handleAuthMessage(
       socketObj.userToken = msg.userToken
       return true
     }
-  } catch {}
+  } catch (e) {
+    console.error("Auth message parse error:", e instanceof Error ? e.message : "Unknown error")
+  }
   return false
 }
 
@@ -191,7 +193,12 @@ function startRoomWatcherForRoom(roomId: string, kv: Deno.Kv) {
             )
             const msg = JSON.stringify({ type: "room", room: roomForClient })
             wsObj.socket.send(msg)
-          } catch (_e) {}
+          } catch (e) {
+            console.error(
+              "Failed to send room update:",
+              e instanceof Error ? e.message : "Unknown error",
+            )
+          }
         }
       }
     }
@@ -219,7 +226,12 @@ export async function startRoomWatcherForRoomOnce(roomId: string, kv: Deno.Kv) {
           )
           const msg = JSON.stringify({ type: "room", room: roomForClient })
           wsObj.socket.send(msg)
-        } catch (_e) {}
+        } catch (e) {
+          console.error(
+            "Failed to send room update:",
+            e instanceof Error ? e.message : "Unknown error",
+          )
+        }
       }
     }
     break // 1回だけで終了

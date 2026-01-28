@@ -1,6 +1,6 @@
 import { Room, UserTokenInfo } from "../type.ts"
 import { CreateRoomRequest, CreateRoomResponse, RoomForClient } from "../type.ts"
-import { CreateRoomRequestSchema } from "../validate.ts"
+import { CreateRoomRequestSchema, JoinRoomRequestSchema } from "../validate.ts"
 import { createRoom, createUserToken, leaveRoom, roomKey, userTokenKey } from "../kv.ts"
 
 export function toRoomForClient(room: Room, userToken: string): RoomForClient {
@@ -71,7 +71,11 @@ export async function handleCreateRoom(
       status: 201,
       headers: { "content-type": "application/json" },
     })
-  } catch (_e) {
+  } catch (e) {
+    console.error(
+      "Failed to create room:",
+      e instanceof Error ? e.message : "Unknown error",
+    )
     return new Response(JSON.stringify({ error: "Server error" }), {
       status: 500,
     })
@@ -83,7 +87,7 @@ export async function handleJoinRoom(
   roomId: string,
   kv: Deno.Kv,
 ): Promise<Response> {
-  let body: { userName: string; userToken?: string }
+  let body: unknown
   try {
     body = await req.json()
   } catch {
@@ -91,15 +95,13 @@ export async function handleJoinRoom(
       status: 400,
     })
   }
-  if (
-    !body.userName ||
-    typeof body.userName !== "string" ||
-    body.userName.length > 24
-  ) {
+  const parse = JoinRoomRequestSchema.safeParse(body)
+  if (!parse.success) {
     return new Response(JSON.stringify({ error: "Validation error" }), {
       status: 400,
     })
   }
+  const { userName, userToken: bodyUserToken } = parse.data
   const roomRes = await kv.get<Room>(roomKey(roomId))
   const room = roomRes.value
   if (!room) {
@@ -107,7 +109,7 @@ export async function handleJoinRoom(
       status: 404,
     })
   }
-  let userToken = body.userToken
+  let userToken = bodyUserToken
   if (!userToken) {
     userToken = crypto.randomUUID()
   }
@@ -117,7 +119,7 @@ export async function handleJoinRoom(
     userTokenInfo = {
       token: userToken,
       currentRoomId: roomId,
-      name: body.userName,
+      name: userName,
       isSpectator: false,
       lastAccessedAt: Date.now(),
     }
@@ -126,7 +128,7 @@ export async function handleJoinRoom(
     userTokenInfo = {
       ...userTokenInfo,
       currentRoomId: roomId,
-      name: body.userName,
+      name: userName,
       lastAccessedAt: Date.now(),
     }
     await kv.atomic().set(userTokenKey(userToken), userTokenInfo).commit()
@@ -134,7 +136,7 @@ export async function handleJoinRoom(
   if (!room.participants.some((p) => p.token === userToken)) {
     room.participants.push({
       token: userToken,
-      name: body.userName,
+      name: userName,
       answer: "",
       isAudience: false,
     })
