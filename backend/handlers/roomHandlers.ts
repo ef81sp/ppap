@@ -8,7 +8,9 @@ const invalidJsonResponse = () =>
   new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400 })
 
 // 競合発生時の最大リトライ回数
-const JOIN_ROOM_MAX_RETRIES = 3
+const JOIN_ROOM_MAX_RETRIES = 5
+// リトライ時の基本待機時間(ms)
+const JOIN_ROOM_RETRY_BASE_DELAY_MS = 10
 
 export function toRoomForClient(room: Room, userToken: string): RoomForClient {
   return {
@@ -158,7 +160,12 @@ export async function handleJoinRoom(
         { status: 200, headers: { "content-type": "application/json" } },
       )
     }
-    console.log(`Join room conflict, retrying (attempt ${attempt + 1}/${JOIN_ROOM_MAX_RETRIES})`)
+    // 指数バックオフ + ジッターで待機してからリトライ
+    const baseDelay = JOIN_ROOM_RETRY_BASE_DELAY_MS * Math.pow(2, attempt)
+    const jitter = Math.random() * baseDelay
+    const delay = Math.round(baseDelay + jitter)
+    console.log(`Join room conflict, retrying in ${delay}ms (attempt ${attempt + 1}/${JOIN_ROOM_MAX_RETRIES})`)
+    await new Promise((resolve) => setTimeout(resolve, delay))
   }
 
   return new Response(
