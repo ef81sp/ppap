@@ -1,4 +1,5 @@
 import { Room } from "../type.ts"
+import { roomKey } from "../kv.ts"
 import { toRoomForClient } from "./roomHandlers.ts"
 import { DisconnectTimerManager } from "../utils/disconnectTimer.ts"
 import { updateParticipant, updateAllParticipants } from "../utils/updateParticipant.ts"
@@ -54,6 +55,8 @@ export function handleWebSocket(
     if (handleAuthMessage(socketObj, event.data)) {
       // 認証時（userToken受信時）にも退室キャンセル
       cancelDisconnectTimer(socketObj.userToken)
+      // auth完了時に最新Room情報を即座に送信
+      await sendCurrentRoomState(kv, roomId, socketObj)
       return
     }
     if (event.data === "ping") {
@@ -125,6 +128,23 @@ export function handleAuthMessage(
     console.error("Auth message parse error:", e instanceof Error ? e.message : "Unknown error")
   }
   return false
+}
+
+// auth完了時に最新Room情報を送信
+export async function sendCurrentRoomState(
+  kv: Deno.Kv,
+  roomId: string,
+  socketObj: { socket: WebSocket; userToken: string | null },
+) {
+  if (!socketObj.userToken) return
+  try {
+    const roomRes = await kv.get<Room>(roomKey(roomId))
+    if (!roomRes.value) return
+    const roomForClient = toRoomForClient(roomRes.value, socketObj.userToken)
+    socketObj.socket.send(JSON.stringify({ type: "room", room: roomForClient }))
+  } catch (e) {
+    console.error("Failed to send initial room state:", e instanceof Error ? e.message : "Unknown error")
+  }
 }
 
 // --- ルームごとに個別にwatcherを起動 ---
