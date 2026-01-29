@@ -44,7 +44,7 @@ const enterTheRoom = async (userName: string) => {
     sessionStorage.setItem('userName', userName);
     sessionStorage.setItem('userToken', res.userToken);
   } catch (e) {
-    alert('ルーム参加に失敗しました');
+    alert('ルーム参加に失敗しました。ページを再読み込みして再度お試しください。');
     return;
   }
 };
