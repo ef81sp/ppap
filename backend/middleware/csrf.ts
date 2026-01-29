@@ -2,6 +2,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:5173",
   "http://localhost:8000",
   "https://ppap.deno.dev",
+  "https://ppap.p-craft.dev",
 ]
 
 export function validateOrigin(
