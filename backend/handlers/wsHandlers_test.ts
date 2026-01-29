@@ -1,5 +1,7 @@
 import { assertEquals } from "jsr:@std/assert"
-import { handleAuthMessage, handleWebSocket } from "./wsHandlers.ts"
+import { handleAuthMessage, handleWebSocket, sendCurrentRoomState } from "./wsHandlers.ts"
+import { Room } from "../type.ts"
+import { clearKvAll } from "../clear_kv.ts"
 
 Deno.test("WebSocket: upgrade request returns response", () => {
   const req = new Request("http://localhost/ws/rooms/testroom", {
@@ -97,3 +99,60 @@ Deno.test(
     assertEquals(socketObj.userToken, null)
   },
 )
+
+Deno.test({
+  name: "sendCurrentRoomState: Room情報を正しく送信する",
+  fn: async () => {
+    const kv = await Deno.openKv("./test")
+    await clearKvAll(kv)
+
+    // Room作成
+    const room: Room = {
+      id: "test-room",
+      participants: [{ token: "user1", name: "テスト", answer: "", isAudience: false }],
+      config: { allowSpectators: true, maxParticipants: 50 },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }
+    await kv.set(["rooms", "test-room"], room)
+
+    // モックWebSocket
+    const sentMessages: string[] = []
+    const mockSocket = {
+      send: (data: string) => sentMessages.push(data),
+    } as unknown as WebSocket
+
+    const socketObj = { socket: mockSocket, userToken: "user1" as string | null }
+
+    await sendCurrentRoomState(kv, "test-room", socketObj)
+
+    assertEquals(sentMessages.length, 1)
+    const msg = JSON.parse(sentMessages[0])
+    assertEquals(msg.type, "room")
+    assertEquals(msg.room.id, "test-room")
+    assertEquals(msg.room.participants.length, 1)
+
+    await clearKvAll(kv)
+    kv.close()
+  },
+})
+
+Deno.test({
+  name: "sendCurrentRoomState: userTokenがnullの場合は送信しない",
+  fn: async () => {
+    const kv = await Deno.openKv("./test")
+
+    const sentMessages: string[] = []
+    const mockSocket = {
+      send: (data: string) => sentMessages.push(data),
+    } as unknown as WebSocket
+
+    const socketObj = { socket: mockSocket, userToken: null as string | null }
+
+    await sendCurrentRoomState(kv, "test-room", socketObj)
+
+    assertEquals(sentMessages.length, 0)
+
+    kv.close()
+  },
+})
