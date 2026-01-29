@@ -8,7 +8,12 @@
     "install-browsers": "deno run -A e2e/install_browsers.ts",
     "deploy:build": "deno run -A --node-modules-dir npm:vite build",
     "deploy:serve": "USE_KV_STORE=true deno run --unstable-kv --unstable-cron --allow-net --allow-read --allow-env deploy-entry.ts",
-    "deploy": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net deploy.ts"
+    "deploy": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net deploy.ts",
+    "test": "deno test --allow-net --allow-read --allow-write --allow-env --unstable-kv backend/",
+    "test:coverage": "deno test --coverage=./coverage --allow-write --unstable-kv backend/",
+    "test:frontend": "deno run -A --node-modules-dir npm:vitest run",
+    "test:all": "deno task test && deno task test:frontend",
+    "test:e2e": "deno test --allow-all --unstable-kv e2e/"
   },
   "imports": {
     "vue": "npm:vue@^3.5.13",
@@ -25,7 +30,10 @@
     "@testing-library/dom": "npm:@testing-library/dom@^9.3.4",
     "playwright-testing-library": "npm:playwright-testing-library@^4.1.0",
     "std/": "https://deno.land/std@0.209.0/",
-    "std/assert/": "https://deno.land/std@0.209.0/assert/"
+    "std/assert/": "https://deno.land/std@0.209.0/assert/",
+    "vitest": "npm:vitest@^3.0.0",
+    "@vue/test-utils": "npm:@vue/test-utils@^2.4.0",
+    "happy-dom": "npm:happy-dom@^16.0.0"
   },
   "nodeModulesDir": "auto",
   "compilerOptions": {
@@ -47,5 +55,9 @@
       "tags": ["recommended"]
     },
     "exclude": [".vite/", "dist", "node_modules"]
-  }
+  },
+  "test": {
+    "exclude": [".vite/", "dist", "node_modules", "src/", "wsMsg/"]
+  },
+  "unstable": ["kv"]
 }

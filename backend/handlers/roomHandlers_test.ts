@@ -288,3 +288,49 @@ Deno.test({
     )
   },
 })
+
+Deno.test({
+  name: "handleJoinRoom: XSS文字がサニタイズされる",
+  fn: async (t) => {
+    let kv: Deno.Kv
+    await t.step("XSS文字を含むuserNameがサニタイズされる", async () => {
+      kv = await Deno.openKv("./test")
+      await clearKvAll(kv)
+      const createReq = new Request("http://localhost/rooms", {
+        method: "POST",
+        body: JSON.stringify({ userName: "ホスト" }),
+        headers: { "content-type": "application/json" },
+      })
+      const createRes = await handleCreateRoom(createReq, kv)
+      const createJson = await createRes.json()
+      const roomId = createJson.roomId
+
+      // XSS文字を含むuserNameで参加（24文字以内に収まるように）
+      const xssName = '<script>alert("xss")'
+      const joinReq = new Request("http://localhost/rooms/" + roomId + "/join", {
+        method: "POST",
+        body: JSON.stringify({ userName: xssName }),
+        headers: { "content-type": "application/json" },
+      })
+      const joinRes = await handleJoinRoom(joinReq, roomId, kv)
+      assertEquals(joinRes.status, 200)
+      const joinJson = await joinRes.json()
+
+      // レスポンスのuserNameがサニタイズされている
+      const participant = joinJson.room.participants.find(
+        (p: { name: string }) => p.name !== "ホスト",
+      )
+      assertEquals(participant.name, "scriptalert(xss)")
+
+      // KVに保存されたnameもサニタイズされている
+      const room = await getRoom(kv, roomId)
+      const storedParticipant = room?.participants.find(
+        (p) => p.name !== "ホスト",
+      )
+      assertEquals(storedParticipant?.name, "scriptalert(xss)")
+
+      await clearKvAll(kv)
+      kv.close()
+    })
+  },
+})

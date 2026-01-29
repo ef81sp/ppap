@@ -1,5 +1,8 @@
 import { Room, RoomId, UserToken, UserTokenInfo } from "./type.ts"
 
+// トークンのデフォルト有効期限: 24時間
+export const DEFAULT_TOKEN_TTL_MS = 24 * 60 * 60 * 1000
+
 // KVのキー生成
 export function roomKey(roomId: RoomId): Deno.KvKey {
   // 戻り値を Deno.KvKey に変更
@@ -44,7 +47,18 @@ export async function createUserToken(
 ): Promise<void> {
   await kv
     .atomic()
-    .set(userTokenKey(info.token), info) // 修正されたキー関数を使用
+    .set(userTokenKey(info.token), info, { expireIn: DEFAULT_TOKEN_TTL_MS })
+    .commit()
+}
+
+export async function createUserTokenWithTTL(
+  kv: Deno.Kv,
+  info: UserTokenInfo,
+  ttlMs: number,
+): Promise<void> {
+  await kv
+    .atomic()
+    .set(userTokenKey(info.token), info, { expireIn: ttlMs })
     .commit()
 }
 export async function getUserToken(
@@ -60,7 +74,7 @@ export async function updateUserToken(
 ): Promise<void> {
   await kv
     .atomic()
-    .set(userTokenKey(info.token), info) // 修正されたキー関数を使用
+    .set(userTokenKey(info.token), info, { expireIn: DEFAULT_TOKEN_TTL_MS })
     .commit()
 }
 export async function deleteUserToken(

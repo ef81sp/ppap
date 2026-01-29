@@ -31,16 +31,16 @@ Deno.test("トップページのテスト", async (t) => {
       const $document = await getDocument(page)
 
       // トップページのタイトルが表示されているか確認
-      const $heading = await queries.getByText($document, "Create Room")
-      assertEquals(await $heading.textContent(), "Create Room")
+      const $heading = await queries.getByText($document, "Create New Room")
+      assertEquals(await $heading.textContent(), "Create New Room")
 
       // 名前入力フォームが表示されているか確認 (label属性を使用)
-      const $nameInput = await queries.getByLabelText($document, "Your Name")
+      const $nameInput = await queries.getByLabelText($document, "Your Name *")
       assertExists($nameInput)
 
       // ボタンが表示されているか確認
       const $createButton = await queries.getByRole($document, "button", {
-        name: "create room",
+        name: "Create Room",
       })
       assertExists($createButton)
     } finally {
@@ -58,12 +58,12 @@ Deno.test("トップページのテスト", async (t) => {
       const $document = await getDocument(page)
 
       // 名前を入力
-      const $nameInput = await queries.getByLabelText($document, "Your Name")
+      const $nameInput = await queries.getByLabelText($document, "Your Name *")
       await $nameInput.fill("TestUser")
 
       // フォームを送信
       const $createButton = await queries.getByRole($document, "button", {
-        name: "create room",
+        name: "Create Room",
       })
       await $createButton.click()
 

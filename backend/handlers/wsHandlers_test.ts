@@ -87,3 +87,13 @@ Deno.test(
     assertEquals(parsed.room.id, roomId)
   },
 )
+
+Deno.test(
+  "handleAuthMessage: 不正JSONでエラーは発生せず、falseを返す",
+  () => {
+    const socketObj = { userToken: null }
+    const ok = handleAuthMessage(socketObj, "{invalid json}")
+    assertEquals(ok, false)
+    assertEquals(socketObj.userToken, null)
+  },
+)

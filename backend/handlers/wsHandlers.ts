@@ -1,14 +1,19 @@
 import { Room } from "../type.ts"
 import { toRoomForClient } from "./roomHandlers.ts"
+import { DisconnectTimerManager } from "../utils/disconnectTimer.ts"
+import { updateParticipant, updateAllParticipants } from "../utils/updateParticipant.ts"
+import { cleanupEmptyRoom } from "../utils/roomCleanup.ts"
+import { WatcherManager } from "../utils/watcherManager.ts"
 
 // --- ルームごとのWebSocket接続管理 ---
 type SocketWithToken = { socket: WebSocket; userToken: string | null }
 const roomSockets = new Map<string, Set<SocketWithToken>>()
 // --- ルームごとのwatcher起動管理 ---
 const roomWatchers = new Map<string, boolean>()
+// --- watcher停止管理 ---
+const watcherManager = new WatcherManager()
 // --- 切断時の退室タイマー管理 ---
-// denoのsetTimeout/clearTimeoutはnumber型
-const disconnectTimers = new Map<string, number>()
+const disconnectTimers = new DisconnectTimerManager()
 
 export function handleWebSocket(
   request: Request,
@@ -32,12 +37,7 @@ export function handleWebSocket(
   // --- 再接続時の退室キャンセル ---
   function cancelDisconnectTimer(userToken: string | null) {
     if (!userToken) return
-    const key = `${roomId}:${userToken}`
-    const timer = disconnectTimers.get(key)
-    if (timer) {
-      clearTimeout(timer)
-      disconnectTimers.delete(key)
-    }
+    disconnectTimers.cancel(roomId, userToken)
   }
 
   socket.onopen = () => {
@@ -63,59 +63,24 @@ export function handleWebSocket(
     try {
       const msg = JSON.parse(event.data)
       if (msg.type === "answer") {
-        // 回答メッセージ受信時、Roomを更新
         const answer = msg.answer
         if (typeof answer === "string" && socketObj.userToken) {
-          const roomRes = await kv.get<import("../type.ts").Room>([
-            "rooms",
-            roomId,
-          ])
-          const room = roomRes.value
-          if (room) {
-            const participant = room.participants.find(
-              (p) => p.token === socketObj.userToken,
-            )
-            if (participant) {
-              participant.answer = answer
-              room.updatedAt = Date.now()
-              await kv.atomic().set(["rooms", roomId], room).commit()
-            }
-          }
+          await updateParticipant(kv, roomId, socketObj.userToken, (p) => {
+            p.answer = answer
+          })
         }
       } else if (
         msg.type === "setAudience" &&
         typeof msg.isAudience === "boolean" &&
         socketObj.userToken
       ) {
-        const roomRes = await kv.get<import("../type.ts").Room>([
-          "rooms",
-          roomId,
-        ])
-        const room = roomRes.value
-        if (room) {
-          const participant = room.participants.find(
-            (p) => p.token === socketObj.userToken,
-          )
-          if (participant) {
-            participant.isAudience = msg.isAudience
-            room.updatedAt = Date.now()
-            await kv.atomic().set(["rooms", roomId], room).commit()
-          }
-        }
+        await updateParticipant(kv, roomId, socketObj.userToken, (p) => {
+          p.isAudience = msg.isAudience
+        })
       } else if (msg.type === "clearAnswer" && socketObj.userToken) {
-        const roomRes = await kv.get<import("../type.ts").Room>([
-          "rooms",
-          roomId,
-        ])
-        const room = roomRes.value
-        if (room) {
-          // 全員の回答を消去
-          for (const participant of room.participants) {
-            participant.answer = ""
-          }
-          room.updatedAt = Date.now()
-          await kv.atomic().set(["rooms", roomId], room).commit()
-        }
+        await updateAllParticipants(kv, roomId, (p) => {
+          p.answer = ""
+        })
       }
     } catch (_e: unknown) {
       console.error(
@@ -126,26 +91,17 @@ export function handleWebSocket(
   socket.onclose = () => {
     roomSockets.get(roomId)?.delete(socketObj)
     console.log(`WebSocket closed for room: ${roomId}`)
+    // --- 空ルームのクリーンアップとwatcher停止 ---
+    if (cleanupEmptyRoom(roomId, roomSockets, roomWatchers)) {
+      watcherManager.stop(roomId)
+    }
     // --- 2秒後に退室・トークン削除タイマー ---
     if (socketObj.userToken) {
-      const key = `${roomId}:${socketObj.userToken}`
-      // 既存タイマーがあればクリア
-      const prev = disconnectTimers.get(key)
-      if (prev) clearTimeout(prev)
-      // 2秒後に退室処理
-      const timer = setTimeout(async () => {
-        // leaveRoom関数を新しい呼び出し方で利用
-        if (socketObj.userToken) {
-          await import("../kv.ts").then(async (kvmod) => {
-            await kvmod.leaveRoom(kv, {
-              roomId,
-              userToken: socketObj.userToken!,
-            })
-          })
-        }
-        disconnectTimers.delete(key)
+      const userToken = socketObj.userToken
+      disconnectTimers.set(roomId, userToken, async () => {
+        const kvmod = await import("../kv.ts")
+        await kvmod.leaveRoom(kv, { roomId, userToken })
       }, 2000)
-      disconnectTimers.set(key, timer as unknown as number)
     }
   }
   socket.onerror = (e) => {
@@ -165,15 +121,23 @@ export function handleAuthMessage(
       socketObj.userToken = msg.userToken
       return true
     }
-  } catch {}
+  } catch (e) {
+    console.error("Auth message parse error:", e instanceof Error ? e.message : "Unknown error")
+  }
   return false
 }
 
 // --- ルームごとに個別にwatcherを起動 ---
 function startRoomWatcherForRoom(roomId: string, kv: Deno.Kv) {
+  const controller = new AbortController()
+  watcherManager.register(roomId, controller)
   ;(async () => {
     const iter = kv.watch([["rooms", roomId]])
     for await (const entries of iter) {
+      // AbortControllerで停止されたらループを抜ける
+      if (controller.signal.aborted) {
+        break
+      }
       for (const entry of entries) {
         const key = entry.key
         const value = entry.value
@@ -191,7 +155,12 @@ function startRoomWatcherForRoom(roomId: string, kv: Deno.Kv) {
             )
             const msg = JSON.stringify({ type: "room", room: roomForClient })
             wsObj.socket.send(msg)
-          } catch (_e) {}
+          } catch (e) {
+            console.error(
+              "Failed to send room update:",
+              e instanceof Error ? e.message : "Unknown error",
+            )
+          }
         }
       }
     }
@@ -219,7 +188,12 @@ export async function startRoomWatcherForRoomOnce(roomId: string, kv: Deno.Kv) {
           )
           const msg = JSON.stringify({ type: "room", room: roomForClient })
           wsObj.socket.send(msg)
-        } catch (_e) {}
+        } catch (e) {
+          console.error(
+            "Failed to send room update:",
+            e instanceof Error ? e.message : "Unknown error",
+          )
+        }
       }
     }
     break // 1回だけで終了
@@ -227,4 +201,4 @@ export async function startRoomWatcherForRoomOnce(roomId: string, kv: Deno.Kv) {
 }
 
 // --- テスト用にエクスポート ---
-export { roomSockets, startRoomWatcherForRoom }
+export { roomSockets, roomWatchers, watcherManager, startRoomWatcherForRoom }
