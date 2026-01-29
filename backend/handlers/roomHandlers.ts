@@ -1,7 +1,7 @@
 import { Room, UserTokenInfo } from "../type.ts"
 import { CreateRoomRequest, CreateRoomResponse, RoomForClient } from "../type.ts"
 import { CreateRoomRequestSchema, JoinRoomRequestSchema } from "../validate.ts"
-import { createRoom, createUserToken, leaveRoom, roomKey, userTokenKey } from "../kv.ts"
+import { createRoom, createUserToken, DEFAULT_TOKEN_TTL_MS, leaveRoom, roomKey, userTokenKey } from "../kv.ts"
 import { JsonParseError, parseJsonBody } from "../utils/parseJsonBody.ts"
 
 const invalidJsonResponse = () =>
@@ -104,58 +104,84 @@ export async function handleJoinRoom(
     })
   }
   const { userName, userToken: bodyUserToken } = parse.data
-  const roomRes = await kv.get<Room>(roomKey(roomId))
-  const room = roomRes.value
-  if (!room) {
-    return new Response(JSON.stringify({ error: "Room not found" }), {
-      status: 404,
-    })
-  }
-  let userToken = bodyUserToken
-  if (!userToken) {
-    userToken = crypto.randomUUID()
-  }
-  const userTokenInfoRes = await kv.get<UserTokenInfo>(userTokenKey(userToken))
-  let userTokenInfo = userTokenInfoRes.value
-  if (!userTokenInfo) {
-    userTokenInfo = {
-      token: userToken,
-      currentRoomId: roomId,
-      name: userName,
-      isSpectator: false,
-      lastAccessedAt: Date.now(),
+
+  const MAX_RETRIES = 3
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    // versionstampを保持してRoom取得
+    const roomRes = await kv.get<Room>(roomKey(roomId))
+    const room = roomRes.value
+    if (!room) {
+      return new Response(JSON.stringify({ error: "Room not found" }), {
+        status: 404,
+      })
     }
-    await kv.atomic().set(userTokenKey(userToken), userTokenInfo).commit()
-  } else {
-    userTokenInfo = {
-      ...userTokenInfo,
-      currentRoomId: roomId,
-      name: userName,
-      lastAccessedAt: Date.now(),
+
+    let userToken = bodyUserToken
+    if (!userToken) {
+      userToken = crypto.randomUUID()
     }
-    await kv.atomic().set(userTokenKey(userToken), userTokenInfo).commit()
+
+    const userTokenInfoRes = await kv.get<UserTokenInfo>(userTokenKey(userToken))
+    let userTokenInfo = userTokenInfoRes.value
+    const now = Date.now()
+
+    if (!userTokenInfo) {
+      userTokenInfo = {
+        token: userToken,
+        currentRoomId: roomId,
+        name: userName,
+        isSpectator: false,
+        lastAccessedAt: now,
+      }
+    } else {
+      userTokenInfo = {
+        ...userTokenInfo,
+        currentRoomId: roomId,
+        name: userName,
+        lastAccessedAt: now,
+      }
+    }
+
+    // 参加者追加が必要かチェック
+    const alreadyJoined = room.participants.some((p) => p.token === userToken)
+    if (!alreadyJoined) {
+      room.participants.push({
+        token: userToken,
+        name: userName,
+        answer: "",
+        isAudience: false,
+      })
+      room.updatedAt = now
+    }
+
+    // 単一のatomic操作でversionstamp check + 更新
+    const atomic = kv.atomic()
+    atomic.check({ key: roomKey(roomId), versionstamp: roomRes.versionstamp })
+    atomic.set(userTokenKey(userToken), userTokenInfo, { expireIn: DEFAULT_TOKEN_TTL_MS })
+    if (!alreadyJoined) {
+      atomic.set(roomKey(roomId), room)
+    }
+
+    const result = await atomic.commit()
+    if (result.ok) {
+      const userNumber = room.participants.findIndex((p) => p.token === userToken)
+      return new Response(
+        JSON.stringify({
+          userToken,
+          userNumber,
+          room: toRoomForClient(room, userToken),
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      )
+    }
+    // 競合が発生した場合、リトライ
+    console.log(`Join room conflict, retrying (attempt ${attempt + 1}/${MAX_RETRIES})`)
   }
-  if (!room.participants.some((p) => p.token === userToken)) {
-    room.participants.push({
-      token: userToken,
-      name: userName,
-      answer: "",
-      isAudience: false,
-    })
-    room.updatedAt = Date.now()
-    await kv.atomic().set(roomKey(roomId), room).commit()
-  }
-  const userNumber = room.participants.findIndex((p) => p.token === userToken)
+
+  // リトライ上限到達
   return new Response(
-    JSON.stringify({
-      userToken,
-      userNumber,
-      room: toRoomForClient(room, userToken),
-    }),
-    {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    },
+    JSON.stringify({ error: "Server busy, please try again" }),
+    { status: 503 },
   )
 }
 
