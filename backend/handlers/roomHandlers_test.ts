@@ -290,6 +290,49 @@ Deno.test({
 })
 
 Deno.test({
+  name: "handleJoinRoom: 同時参加でも全員がparticipantsに含まれる",
+  fn: async (t) => {
+    let kv: Deno.Kv
+    await t.step("複数ユーザーが同時にjoinした場合", async () => {
+      kv = await Deno.openKv("./test")
+      await clearKvAll(kv)
+
+      // Room作成
+      const createReq = new Request("http://localhost/rooms", {
+        method: "POST",
+        body: JSON.stringify({ userName: "ホスト" }),
+        headers: { "content-type": "application/json" },
+      })
+      const createRes = await handleCreateRoom(createReq, kv)
+      const createJson = await createRes.json()
+      const roomId = createJson.roomId
+
+      // 複数ユーザーが同時にjoin (並列実行)
+      const joinPromises = ["参加者A", "参加者B", "参加者C"].map((userName) => {
+        const req = new Request(`http://localhost/rooms/${roomId}/join`, {
+          method: "POST",
+          body: JSON.stringify({ userName }),
+          headers: { "content-type": "application/json" },
+        })
+        return handleJoinRoom(req, roomId, kv)
+      })
+
+      const results = await Promise.all(joinPromises)
+
+      // 全員が正常に参加できている (503でない)
+      results.forEach((res) => assertEquals(res.status, 200))
+
+      // KVのRoomに全員含まれている
+      const room = await getRoom(kv, roomId)
+      assertEquals(room?.participants.length, 4) // ホスト + 3名
+
+      await clearKvAll(kv)
+      kv.close()
+    })
+  },
+})
+
+Deno.test({
   name: "handleJoinRoom: XSS文字がサニタイズされる",
   fn: async (t) => {
     let kv: Deno.Kv
