@@ -7,6 +7,9 @@ import { JsonParseError, parseJsonBody } from "../utils/parseJsonBody.ts"
 const invalidJsonResponse = () =>
   new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400 })
 
+// 競合発生時の最大リトライ回数
+const JOIN_ROOM_MAX_RETRIES = 3
+
 export function toRoomForClient(room: Room, userToken: string): RoomForClient {
   return {
     id: room.id,
@@ -104,10 +107,9 @@ export async function handleJoinRoom(
     })
   }
   const { userName, userToken: bodyUserToken } = parse.data
+  const userToken = bodyUserToken ?? crypto.randomUUID()
 
-  const MAX_RETRIES = 3
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    // versionstampを保持してRoom取得
+  for (let attempt = 0; attempt < JOIN_ROOM_MAX_RETRIES; attempt++) {
     const roomRes = await kv.get<Room>(roomKey(roomId))
     const room = roomRes.value
     if (!room) {
@@ -116,33 +118,16 @@ export async function handleJoinRoom(
       })
     }
 
-    let userToken = bodyUserToken
-    if (!userToken) {
-      userToken = crypto.randomUUID()
-    }
-
-    const userTokenInfoRes = await kv.get<UserTokenInfo>(userTokenKey(userToken))
-    let userTokenInfo = userTokenInfoRes.value
     const now = Date.now()
-
-    if (!userTokenInfo) {
-      userTokenInfo = {
-        token: userToken,
-        currentRoomId: roomId,
-        name: userName,
-        isSpectator: false,
-        lastAccessedAt: now,
-      }
-    } else {
-      userTokenInfo = {
-        ...userTokenInfo,
-        currentRoomId: roomId,
-        name: userName,
-        lastAccessedAt: now,
-      }
+    const existingTokenInfo = (await kv.get<UserTokenInfo>(userTokenKey(userToken))).value
+    const userTokenInfo: UserTokenInfo = {
+      token: userToken,
+      currentRoomId: roomId,
+      name: userName,
+      isSpectator: existingTokenInfo?.isSpectator ?? false,
+      lastAccessedAt: now,
     }
 
-    // 参加者追加が必要かチェック
     const alreadyJoined = room.participants.some((p) => p.token === userToken)
     if (!alreadyJoined) {
       room.participants.push({
@@ -154,7 +139,6 @@ export async function handleJoinRoom(
       room.updatedAt = now
     }
 
-    // 単一のatomic操作でversionstamp check + 更新
     const atomic = kv.atomic()
     atomic.check({ key: roomKey(roomId), versionstamp: roomRes.versionstamp })
     atomic.set(userTokenKey(userToken), userTokenInfo, { expireIn: DEFAULT_TOKEN_TTL_MS })
@@ -174,11 +158,9 @@ export async function handleJoinRoom(
         { status: 200, headers: { "content-type": "application/json" } },
       )
     }
-    // 競合が発生した場合、リトライ
-    console.log(`Join room conflict, retrying (attempt ${attempt + 1}/${MAX_RETRIES})`)
+    console.log(`Join room conflict, retrying (attempt ${attempt + 1}/${JOIN_ROOM_MAX_RETRIES})`)
   }
 
-  // リトライ上限到達
   return new Response(
     JSON.stringify({ error: "Server busy, please try again" }),
     { status: 503 },
