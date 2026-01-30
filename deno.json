@@ -13,7 +13,7 @@
     "test:coverage": "deno test --coverage=./coverage --allow-write --unstable-kv backend/",
     "test:frontend": "deno run -A --node-modules-dir npm:vitest run",
     "test:all": "deno task test && deno task test:frontend",
-    "test:e2e": "deno test --allow-all --unstable-kv e2e/"
+    "test:e2e": "./e2e/run_e2e.sh"
   },
   "imports": {
     "vue": "npm:vue@^3.5.13",
