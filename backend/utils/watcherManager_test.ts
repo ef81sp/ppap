@@ -1,4 +1,4 @@
-import { assertEquals } from "std/assert/mod.ts"
+import { assertEquals } from "jsr:@std/assert"
 import { WatcherManager } from "./watcherManager.ts"
 
 Deno.test("WatcherManager", async (t) => {

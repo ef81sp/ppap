@@ -13,7 +13,7 @@ import {
   handleLeaveRoom,
   handleRejoinRoom,
 } from "./roomHandlers.ts"
-import { assert, assertEquals, assertExists } from "https://deno.land/std@0.203.0/assert/mod.ts"
+import { assert, assertEquals, assertExists } from "jsr:@std/assert"
 
 Deno.test({
   name: "handleCreateRoom",

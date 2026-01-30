@@ -29,8 +29,6 @@
     "expect": "npm:expect@^29.7.0",
     "@testing-library/dom": "npm:@testing-library/dom@^9.3.4",
     "playwright-testing-library": "npm:playwright-testing-library@^4.1.0",
-    "std/": "https://deno.land/std@0.209.0/",
-    "std/assert/": "https://deno.land/std@0.209.0/assert/",
     "vitest": "npm:vitest@^3.0.0",
     "@vue/test-utils": "npm:@vue/test-utils@^2.4.0",
     "happy-dom": "npm:happy-dom@^16.0.0"
