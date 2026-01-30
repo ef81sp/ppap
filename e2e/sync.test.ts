@@ -1,4 +1,4 @@
-import { assertEquals } from "std/assert/mod.ts"
+import { assertEquals } from "jsr:@std/assert"
 import { getDocument, queries } from "playwright-testing-library"
 import {
   cleanupKVStore,

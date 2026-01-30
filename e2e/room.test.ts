@@ -1,5 +1,5 @@
 import { Browser as _Browser } from "playwright"
-import { assertEquals, assertExists } from "std/assert/mod.ts"
+import { assertEquals, assertExists } from "jsr:@std/assert"
 import { cleanupKVStore, createPage, isServerRunning, setupBrowser } from "./helpers.ts"
 // Testing Libraryをインポート（存在しないインポートを削除）
 import { getDocument, queries } from "playwright-testing-library"

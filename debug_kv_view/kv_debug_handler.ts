@@ -1,5 +1,5 @@
-import { serveDir } from "https://deno.land/std@0.224.0/http/file_server.ts"
-import { dirname, fromFileUrl, join } from "https://deno.land/std@0.224.0/path/mod.ts"
+import { serveDir } from "jsr:@std/http/file-server"
+import { dirname, fromFileUrl, join } from "jsr:@std/path"
 
 // publicディレクトリの絶対パスを取得
 const __dirname = dirname(fromFileUrl(import.meta.url))
