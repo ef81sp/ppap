@@ -70,13 +70,13 @@ describe("webSocket", () => {
     it("正しいWebSocket URLを生成する（HTTPS）", () => {
       vi.stubGlobal("location", {
         protocol: "https:",
-        host: "ppap.deno.dev",
+        host: "ppap.p-craft.deno.net",
       })
 
       useRoomWebSocket("room-456")
 
       expect(mockUseWebSocket).toHaveBeenCalledWith(
-        "wss://ppap.deno.dev/ws/rooms/room-456",
+        "wss://ppap.p-craft.deno.net/ws/rooms/room-456",
         expect.any(Object),
       )
     })
