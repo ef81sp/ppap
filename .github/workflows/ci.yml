@@ -12,12 +12,12 @@ jobs:
 
     steps:
       - name: Clone repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.4.0
 
       - name: Install Deno
-        uses: denoland/setup-deno@v2
+        uses: denoland/setup-deno@v2.0.5
         with:
-          deno-version: v2.x
+          deno-version: 2.9.4
 
       - name: Run tests
         run: deno task test:all
