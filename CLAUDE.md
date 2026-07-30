@@ -29,7 +29,14 @@ PPAP（Planning Poker Application Portable）-
 
 ### デプロイ
 
-- `deno task deploy` - Deno Deployへデプロイ
+Deno Deploy（console.deno.com）のGitHub連携により、`main`へのpushで自動デプロイされる。
+ビルド設定はDeno Deployのダッシュボード側で管理（Build command: `deno task build`、 Entrypoint:
+`backend/server.ts`）。
+
+- 本番: https://ppap.p-craft.deno.net
+- カスタムドメイン https://ppap.p-craft.dev はDNS移行後に有効化予定
+- KVはアプリにアタッチされたDeno KVデータベースを`Deno.openKv()`が自動で参照する
+- `APP_ENV=development`を本番に設定しないこと（KVデバッグビューアが公開される）
 
 ## アーキテクチャ
 
@@ -38,7 +45,7 @@ PPAP（Planning Poker Application Portable）-
 - フロントエンド: Vue 3 + TypeScript + Vite + Tailwind CSS
 - バックエンド: Deno v2 + Deno KV
 - リアルタイム通信: WebSocket
-- ホスティング: Deno Deploy
+- ホスティング: Deno Deploy（console.deno.com。Deploy Classicは2026-07-20に終了済み）
 
 ### ディレクトリ構成
 
