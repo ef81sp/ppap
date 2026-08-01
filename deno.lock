@@ -1,12 +1,8 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@std/assert@*": "1.0.19",
-    "jsr:@std/internal@^1.0.12": "1.0.14",
-    "jsr:@std/internal@^1.0.14": "1.0.14",
-    "jsr:@std/path@*": "1.1.6",
     "npm:@testing-library/dom@9.3.4": "9.3.4",
-    "npm:@vitejs/plugin-vue@5.2.4": "5.2.4_vite@6.4.3__picomatch@4.0.5_vue@3.5.40",
+    "npm:@vitejs/plugin-vue@5.2.4": "5.2.4_vite@6.4.3_vue@3.5.40",
     "npm:@vue/test-utils@2.4.11": "2.4.11_@vue+compiler-dom@3.5.40_vue@3.5.40",
     "npm:@vueuse/core@10.11.1": "10.11.1_vue@3.5.40",
     "npm:autoprefixer@10.5.4": "10.5.4_postcss@8.5.22",
@@ -15,30 +11,11 @@
     "npm:playwright-testing-library@4.5.0": "4.5.0_playwright@1.61.1",
     "npm:playwright@1.61.1": "1.61.1",
     "npm:postcss@8.5.22": "8.5.22",
-    "npm:tailwindcss@3.4.19": "3.4.19_postcss@8.5.22_jiti@1.21.7",
-    "npm:vite@*": "6.4.3_picomatch@4.0.5",
-    "npm:vite@6.4.3": "6.4.3_picomatch@4.0.5",
-    "npm:vitest@*": "3.2.7_happy-dom@16.8.1_vite@6.4.3__picomatch@4.0.5",
-    "npm:vitest@3.2.7": "3.2.7_happy-dom@16.8.1_vite@6.4.3__picomatch@4.0.5",
+    "npm:tailwindcss@3.4.19": "3.4.19",
+    "npm:vite@6.4.3": "6.4.3",
+    "npm:vitest@3.2.7": "3.2.7_happy-dom@16.8.1",
     "npm:vue-router@4.6.4": "4.6.4_vue@3.5.40",
     "npm:vue@3.5.40": "3.5.40"
-  },
-  "jsr": {
-    "@std/assert@1.0.19": {
-      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
-      "dependencies": [
-        "jsr:@std/internal@^1.0.12"
-      ]
-    },
-    "@std/internal@1.0.14": {
-      "integrity": "291516b3d4c35024d6ffbc0a9df5bf4c64116e05b50012cf846710152d2ffdf7"
-    },
-    "@std/path@1.1.6": {
-      "integrity": "c68485c2a4dfbb5ae3cc74fae4e8c4e5d874cf8a8ed12927917235c758b46cbe",
-      "dependencies": [
-        "jsr:@std/internal@^1.0.14"
-      ]
-    }
   },
   "npm": {
     "@alloc/quick-lru@5.2.0": {
@@ -513,7 +490,7 @@
         "@types/yargs-parser"
       ]
     },
-    "@vitejs/plugin-vue@5.2.4_vite@6.4.3__picomatch@4.0.5_vue@3.5.40": {
+    "@vitejs/plugin-vue@5.2.4_vite@6.4.3_vue@3.5.40": {
       "integrity": "sha512-7Yx/SXSOcQq5HiiV3orevHUFn+pmMB4cgbEkDYgnkUWb0WfeQ/wa2yFv6D5ICiCQOVpjA7vYDXrC7AGO8yjDHA==",
       "dependencies": [
         "vite",
@@ -530,7 +507,7 @@
         "tinyrainbow"
       ]
     },
-    "@vitest/mocker@3.2.7_vite@6.4.3__picomatch@4.0.5": {
+    "@vitest/mocker@3.2.7_vite@6.4.3": {
       "integrity": "sha512-Trr0hYO9CM3Wj6ksWHRhK9IZpIY6wTMO5u/MqXurMxT57sWBaOPEtP3Oq60ihZuh5JsiagKfz95OcxdEP6dBrA==",
       "dependencies": [
         "@vitest/spy",
@@ -979,8 +956,8 @@
       ],
       "bin": true
     },
-    "electron-to-chromium@1.5.395": {
-      "integrity": "sha512-7zt9Aw+SrmxLWLN0zhaTWZQiCdryLVrYTq5R7iZakLvi2UQPYMMsROYV/2qVCzMeCiSXHwKOU+sZ4zOVVlrtKA=="
+    "electron-to-chromium@1.5.396": {
+      "integrity": "sha512-yHiw2Y3C3H9U6TMbOfoWK/BPreiOPXRfTWPBwQBoZG6/8TB6eOPnsy5oaRYuatR7Fw2SJ4kKforgufeo7fq0EQ=="
     },
     "emoji-regex@8.0.0": {
       "integrity": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="
@@ -1943,7 +1920,7 @@
     "supports-preserve-symlinks-flag@1.0.0": {
       "integrity": "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w=="
     },
-    "tailwindcss@3.4.19_postcss@8.5.22_jiti@1.21.7": {
+    "tailwindcss@3.4.19": {
       "integrity": "sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ==",
       "dependencies": [
         "@alloc/quick-lru",
@@ -1989,7 +1966,7 @@
     "tinyexec@0.3.2": {
       "integrity": "sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA=="
     },
-    "tinyglobby@0.2.17_picomatch@4.0.5": {
+    "tinyglobby@0.2.17": {
       "integrity": "sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==",
       "dependencies": [
         "fdir",
@@ -2040,7 +2017,7 @@
       ],
       "bin": true
     },
-    "vite@6.4.3_picomatch@4.0.5": {
+    "vite@6.4.3": {
       "integrity": "sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A==",
       "dependencies": [
         "esbuild",
@@ -2055,7 +2032,7 @@
       ],
       "bin": true
     },
-    "vitest@3.2.7_happy-dom@16.8.1_vite@6.4.3__picomatch@4.0.5": {
+    "vitest@3.2.7_happy-dom@16.8.1": {
       "integrity": "sha512-KrxIJ62Fd89gfysR4WotlgZABiz2dqFPgqGzX7s+CwsqLFomRH7777ZcrOD6+WVAh7khPQP41A+BKbpcJFrdEg==",
       "dependencies": [
         "@types/chai",
@@ -2187,21 +2164,6 @@
         "strip-ansi@7.2.0"
       ]
     }
-  },
-  "remote": {
-    "https://deno.land/x/zod@v3.22.4/ZodError.ts": "4de18ff525e75a0315f2c12066b77b5c2ae18c7c15ef7df7e165d63536fdf2ea",
-    "https://deno.land/x/zod@v3.22.4/errors.ts": "5285922d2be9700cc0c70c95e4858952b07ae193aa0224be3cbd5cd5567eabef",
-    "https://deno.land/x/zod@v3.22.4/external.ts": "a6cfbd61e9e097d5f42f8a7ed6f92f93f51ff927d29c9fbaec04f03cbce130fe",
-    "https://deno.land/x/zod@v3.22.4/helpers/enumUtil.ts": "54efc393cc9860e687d8b81ff52e980def00fa67377ad0bf8b3104f8a5bf698c",
-    "https://deno.land/x/zod@v3.22.4/helpers/errorUtil.ts": "7a77328240be7b847af6de9189963bd9f79cab32bbc61502a9db4fe6683e2ea7",
-    "https://deno.land/x/zod@v3.22.4/helpers/parseUtil.ts": "f791e6e65a0340d85ad37d26cd7a3ba67126cd9957eac2b7163162155283abb1",
-    "https://deno.land/x/zod@v3.22.4/helpers/partialUtil.ts": "998c2fe79795257d4d1cf10361e74492f3b7d852f61057c7c08ac0a46488b7e7",
-    "https://deno.land/x/zod@v3.22.4/helpers/typeAliases.ts": "0fda31a063c6736fc3cf9090dd94865c811dfff4f3cb8707b932bf937c6f2c3e",
-    "https://deno.land/x/zod@v3.22.4/helpers/util.ts": "8baf19b19b2fca8424380367b90364b32503b6b71780269a6e3e67700bb02774",
-    "https://deno.land/x/zod@v3.22.4/index.ts": "d27aabd973613985574bc31f39e45cb5d856aa122ef094a9f38a463b8ef1a268",
-    "https://deno.land/x/zod@v3.22.4/locales/en.ts": "a7a25cd23563ccb5e0eed214d9b31846305ddbcdb9c5c8f508b108943366ab4c",
-    "https://deno.land/x/zod@v3.22.4/mod.ts": "64e55237cb4410e17d968cd08975566059f27638ebb0b86048031b987ba251c4",
-    "https://deno.land/x/zod@v3.22.4/types.ts": "724185522fafe43ee56a52333958764c8c8cd6ad4effa27b42651df873fc151e"
   },
   "workspace": {
     "dependencies": [
