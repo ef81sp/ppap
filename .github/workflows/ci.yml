@@ -17,7 +17,7 @@ jobs:
       - name: Install Deno
         uses: denoland/setup-deno@v2.0.5
         with:
-          deno-version: 2.9.4
+          deno-version: 2.9.5
 
       - name: Run tests
         run: deno task test:all
