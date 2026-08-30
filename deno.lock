@@ -7,13 +7,13 @@
     "npm:@vueuse/core@10.11.1": "10.11.1_vue@3.5.41",
     "npm:autoprefixer@10.5.4": "10.5.4_postcss@8.5.26",
     "npm:expect@30.4.1": "30.4.1",
-    "npm:happy-dom@20.11.2": "20.11.2",
+    "npm:happy-dom@20.11.6": "20.11.6",
     "npm:playwright-testing-library@4.5.0": "4.5.0_playwright@1.62.1",
     "npm:playwright@1.62.1": "1.62.1",
     "npm:postcss@8.5.26": "8.5.26",
     "npm:tailwindcss@3.4.19": "3.4.19",
     "npm:vite@6.4.3": "6.4.3",
-    "npm:vitest@3.2.7": "3.2.7_happy-dom@20.11.2",
+    "npm:vitest@3.2.7": "3.2.7_happy-dom@20.11.6",
     "npm:vue-router@4.6.4": "4.6.4_vue@3.5.41",
     "npm:vue@3.5.41": "3.5.41"
   },
@@ -1063,8 +1063,8 @@
     "graceful-fs@4.2.11": {
       "integrity": "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="
     },
-    "happy-dom@20.11.2": {
-      "integrity": "sha512-7MB+bJLkxu3SowAfBJbjW+c55kNz5tkR45gu2qzrxznezhLeN5YIlJbwUgSzlGc+qWoZ8Ykg71H5ezz69xixrw==",
+    "happy-dom@20.11.6": {
+      "integrity": "sha512-Hldbg8AdAa5a5oDcZpjqnGitp7JB0hqWmfv/8qr+kft4vzSD8BHsbdRfzYvL/0QcbKcURC/yyoygbeDQarPvYg==",
       "dependencies": [
         "@types/node",
         "@types/whatwg-mimetype",
@@ -1707,7 +1707,7 @@
       ],
       "bin": true
     },
-    "vitest@3.2.7_happy-dom@20.11.2": {
+    "vitest@3.2.7_happy-dom@20.11.6": {
       "integrity": "sha512-KrxIJ62Fd89gfysR4WotlgZABiz2dqFPgqGzX7s+CwsqLFomRH7777ZcrOD6+WVAh7khPQP41A+BKbpcJFrdEg==",
       "dependencies": [
         "@types/chai",
@@ -1817,7 +1817,7 @@
       "npm:@vueuse/core@10.11.1",
       "npm:autoprefixer@10.5.4",
       "npm:expect@30.4.1",
-      "npm:happy-dom@20.11.2",
+      "npm:happy-dom@20.11.6",
       "npm:playwright-testing-library@4.5.0",
       "npm:playwright@1.62.1",
       "npm:postcss@8.5.26",
