@@ -75,11 +75,14 @@ Deno Deploy（console.deno.com）のGitHub連携により、`main`へのpushで�
 ## 依存管理
 
 - `deno.json`の`imports`は**キャレットなしの厳密バージョン**で固定する
+- `jsr:`/`npm:`/URLのインライン指定はRenovateに検出されないため使わず、`imports`に定義してから bare
+  specifierで参照する
 - `minimumDependencyAge: "P7D"`により、リリースから7日未満のバージョンは解決されない
   （サプライチェーン攻撃対策）。7日未満に上げたい場合は`--minimum-dependency-age 0`で一時解除
 - 自動更新はRenovate（`renovate.json`）。Dependabotは`deno.json`/`deno.lock`非対応
   - マイナー/パッチ: 週次でグループPR
-  - メジャー: Dependency Dashboardで承認したものだけPR作成
+  - メジャー: Dependency Dashboardで承認したものだけPR作成（vite/vitest/plugin-vue等はまとめて1PR）
+  - GitHub Actionsのマイナー/パッチ: CI通過後に自動マージ
 - 更新後は`deno task test:all`と`deno task build`を通す
 
 ## コーディング規約
