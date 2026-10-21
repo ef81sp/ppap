@@ -1,4 +1,4 @@
-import { useWebSocket } from "@vueuse/core"
+import { useIntervalFn, useWebSocket } from "@vueuse/core"
 import { setRoom, user } from "./store.ts"
 
 export function useRoomWebSocket(roomId: string) {
@@ -9,7 +9,10 @@ export function useRoomWebSocket(roomId: string) {
   const { status, data, send, open, close, ws } = useWebSocket(wsUrl, {
     immediate: false, // 明示的にopen()するまで接続しない
     autoReconnect: true,
-    heartbeat: { message: "ping", interval: 30000 },
+    heartbeat: {
+      message: "ping",
+      scheduler: (cb) => useIntervalFn(cb, 30000, { immediate: false }),
+    },
     onConnected: () => {
       // 接続時にuserTokenをサーバーへ送信
       if (user.token.value) {
