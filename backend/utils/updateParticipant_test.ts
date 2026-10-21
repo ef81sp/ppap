@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert"
+import { assertEquals } from "@std/assert"
 import { updateParticipant, updateAllParticipants } from "./updateParticipant.ts"
 import { Room } from "../type.ts"
 

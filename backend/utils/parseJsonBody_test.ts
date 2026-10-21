@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "jsr:@std/assert"
+import { assertEquals, assertRejects } from "@std/assert"
 import { parseJsonBody, JsonParseError } from "./parseJsonBody.ts"
 
 Deno.test("parseJsonBody", async (t) => {

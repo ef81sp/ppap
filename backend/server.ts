@@ -1,4 +1,4 @@
-import { serveDir } from "jsr:@std/http/file-server"
+import { serveDir } from "@std/http/file-server"
 import { handleKvDebugRequest } from "../debug_kv_view/kv_debug_handler.ts"
 import {
   handleCreateRoom,

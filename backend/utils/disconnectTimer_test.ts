@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert"
+import { assertEquals } from "@std/assert"
 import { DisconnectTimerManager } from "./disconnectTimer.ts"
 
 Deno.test("DisconnectTimerManager", async (t) => {

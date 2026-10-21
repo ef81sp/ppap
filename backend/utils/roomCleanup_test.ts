@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert"
+import { assertEquals } from "@std/assert"
 import { cleanupEmptyRoom, getRoomSocketCount } from "./roomCleanup.ts"
 
 Deno.test("cleanupEmptyRoom", async (t) => {
