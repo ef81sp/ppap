@@ -25,7 +25,9 @@ PPAP（Planning Poker Application Portable）-
 
 - `deno test backend/` - バックエンドテスト実行
 - `deno test backend/handlers/roomHandlers_test.ts` - 単一テストファイル実行
-- `deno task install-browsers` - E2Eテスト用ブラウザインストール
+- `deno task install-browsers` -
+  E2Eテスト用ブラウザインストール（deno.jsonで固定したPlaywrightの版）
+- `deno task test:e2e` - E2Eテスト実行（ビルド・サーバー起動込み、CIでも実行）
 
 ### デプロイ
 
@@ -83,7 +85,7 @@ Deno Deploy（console.deno.com）のGitHub連携により、`main`へのpushで�
   - マイナー/パッチ: 週次でグループPR
   - メジャー: Dependency Dashboardで承認したものだけPR作成（vite/vitest/plugin-vue等はまとめて1PR）
   - GitHub Actionsのマイナー/パッチ: CI通過後に自動マージ
-- 更新後は`deno task test:all`と`deno task build`を通す
+- 更新後は`deno task test:all`・`deno task build`・`deno task test:e2e`を通す（CIでも全て実行）
 
 ## コーディング規約
 
