@@ -1,5 +1,5 @@
-import { serveDir } from "jsr:@std/http/file-server"
-import { dirname, fromFileUrl, join } from "jsr:@std/path"
+import { serveDir } from "@std/http/file-server"
+import { dirname, fromFileUrl, join } from "@std/path"
 
 // publicディレクトリの絶対パスを取得
 const __dirname = dirname(fromFileUrl(import.meta.url))

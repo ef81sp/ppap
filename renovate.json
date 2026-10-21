@@ -26,6 +26,17 @@
     {
       "matchManagers": ["github-actions"],
       "groupName": "github-actions"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true
+    },
+    {
+      "matchManagers": ["deno"],
+      "matchPackageNames": ["vite", "@vitejs/plugin-vue", "vitest", "@tailwindcss/vite"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "vite ecosystem (major)"
     }
   ]
 }

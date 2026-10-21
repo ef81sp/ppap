@@ -20,7 +20,7 @@ const answer = computed(() => {
     <h3 class="m-1 w-full truncate">{{ participant.name }}</h3>
     <div
       v-if="participant.isAudience"
-      class="aspect-[63/88] text-5xl w-20 grid place-items-center border-2 rounded-sm border-dashed border-black bg-gray-100"
+      class="aspect-[63/88] text-5xl w-20 grid place-items-center border-2 rounded-xs border-dashed border-black bg-gray-100"
     >
       <p class="rotate-[54deg] text-base text-center">Audience</p>
     </div>

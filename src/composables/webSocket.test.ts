@@ -3,6 +3,7 @@ import { ref } from "vue"
 
 // useWebSocketのモック
 vi.mock("@vueuse/core", () => ({
+  useIntervalFn: vi.fn(),
   useWebSocket: vi.fn(),
 }))
 
@@ -14,7 +15,7 @@ vi.mock("./store.ts", () => ({
   },
 }))
 
-import { useWebSocket } from "@vueuse/core"
+import { useIntervalFn, useWebSocket } from "@vueuse/core"
 import { setRoom, user } from "./store.ts"
 import { useRoomWebSocket } from "./webSocket.ts"
 
@@ -96,10 +97,13 @@ describe("webSocket", () => {
     it("heartbeatが30秒間隔で設定されている", () => {
       useRoomWebSocket("room-123")
 
-      expect(capturedOptions?.heartbeat).toEqual({
-        message: "ping",
-        interval: 30000,
-      })
+      const heartbeat = capturedOptions?.heartbeat
+      if (typeof heartbeat !== "object") throw new Error("heartbeat is not configured")
+      expect(heartbeat.message).toBe("ping")
+
+      const cb = () => {}
+      heartbeat.scheduler?.(cb)
+      expect(useIntervalFn).toHaveBeenCalledWith(cb, 30000, { immediate: false })
     })
 
     it("send, open, close関数を返す", () => {

@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "jsr:@std/assert"
+import { assertEquals, assertExists } from "@std/assert"
 import { getDocument, queries } from "playwright-testing-library"
 import {
   BASE_URL,

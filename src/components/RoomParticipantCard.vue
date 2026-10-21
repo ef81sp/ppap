@@ -24,9 +24,9 @@ const cardClass = computed(() => {
     case 'reverse':
       return common + ' ' + 'border-none';
     case 'open':
-      return common + ' ' + 'border-4 rounded-sm border-solid border-slate-700';
+      return common + ' ' + 'border-4 rounded-xs border-solid border-slate-700';
     case 'empty':
-      return common + ' ' + 'border-2 rounded-sm border-dashed border-black';
+      return common + ' ' + 'border-2 rounded-xs border-dashed border-black';
   }
 });
 </script>

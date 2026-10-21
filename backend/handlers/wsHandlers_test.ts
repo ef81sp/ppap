@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert"
+import { assertEquals } from "@std/assert"
 import { handleAuthMessage, handleWebSocket, sendCurrentRoomState } from "./wsHandlers.ts"
 import { Room } from "../type.ts"
 import { clearKvAll } from "../clear_kv.ts"
