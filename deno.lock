@@ -30,7 +30,7 @@
     "npm:vitest@5.1.0": "5.1.0_happy-dom@21.0.4_vite@8.3.6",
     "npm:vue-router@5.4.0": "5.4.0_vite@8.3.6_vue@3.5.45",
     "npm:vue@3.5.45": "3.5.45",
-    "npm:zod@3.25.76": "3.25.76"
+    "npm:zod@4.6.7": "4.6.7"
   },
   "jsr": {
     "@std/assert@1.0.19": {
@@ -1406,8 +1406,8 @@
     "ws@8.22.1": {
       "integrity": "sha512-oyL6OPYme/CmiFvNuGzeoxCJ4nOrZE2O1FwM9MWM1AsGri6nLXB2pg+lNA8aLeXMSav0J6eIVS1j6vUPzUtK9g=="
     },
-    "zod@3.25.76": {
-      "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="
+    "zod@4.6.7": {
+      "integrity": "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg=="
     }
   },
   "workspace": {
@@ -1429,7 +1429,7 @@
       "npm:vitest@5.1.0",
       "npm:vue-router@5.4.0",
       "npm:vue@3.5.45",
-      "npm:zod@3.25.76"
+      "npm:zod@4.6.7"
     ]
   }
 }
